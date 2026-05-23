@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git commit -m '初期プロジェクト構成を作成：DB スキーマ・型定義・認証基盤 *)"
+    ]
+  }
+}

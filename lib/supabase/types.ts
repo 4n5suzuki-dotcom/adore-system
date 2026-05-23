@@ -59,6 +59,7 @@ export interface Interview {
   address_detail: string | null
   live_alone: boolean | null
   roommate_info: string | null
+  memo: string | null
   status: 'incomplete' | 'pending' | 'confirmed' | 'processing' | 'hired' | 'rejected' | 'on_trial'
   agreed_back_regulation_version: string | null
   agreed_at: string | null

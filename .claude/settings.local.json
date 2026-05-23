@@ -19,7 +19,17 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/admin)",
       "Bash(curl -s http://localhost:3000/auth/login)",
       "Bash(node .tmp-auth-check.mjs)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(node .tmp-interviews-check.mjs)",
+      "Bash(curl -s http://localhost:3000/admin)",
+      "Bash(node .tmp-col-check.mjs)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/admin/interviews/00000000-0000-0000-0000-000000000000\")",
+      "Bash(curl -s \"http://localhost:3000/admin/interviews/test-id\")",
+      "Bash([ -f \"$F\" ])",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/admin/interviews/test-id/edit\")",
+      "Bash(curl -s \"http://localhost:3000/admin/interviews/test-id/edit\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/interview\")",
+      "Bash(curl -s \"http://localhost:3000/interview\")"
     ]
   }
 }

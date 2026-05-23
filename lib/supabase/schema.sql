@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS interviews (
   address_detail TEXT,
   live_alone BOOLEAN,
   roommate_info TEXT,
+  memo TEXT,
   status VARCHAR(50) DEFAULT 'incomplete',
   agreed_back_regulation_version VARCHAR(20),
   agreed_at TIMESTAMP,

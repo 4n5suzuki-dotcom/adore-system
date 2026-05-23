@@ -15,7 +15,11 @@
       "Bash(curl -s http://localhost:3000/_next/static/chunks/styles_globals_0rhi7k0.css)",
       "Bash(curl -s \"http://localhost:3000/_next/static/chunks/styles_globals_0rhi7k0.css\" -o /c/Users/lclub/projects/adore-system/.compiled-check.css)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/auth/login)",
-      "Bash(git commit -m 'Tailwind CSS スタイル配線完了 *)"
+      "Bash(git commit -m 'Tailwind CSS スタイル配線完了 *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/admin)",
+      "Bash(curl -s http://localhost:3000/auth/login)",
+      "Bash(node .tmp-auth-check.mjs)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

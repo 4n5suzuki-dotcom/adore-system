@@ -4,7 +4,18 @@
       "Bash(git init *)",
       "Bash(git config *)",
       "Bash(git add *)",
-      "Bash(git commit -m '初期プロジェクト構成を作成：DB スキーマ・型定義・認証基盤 *)"
+      "Bash(git commit -m '初期プロジェクト構成を作成：DB スキーマ・型定義・認証基盤 *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP_STATUS:%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP_STATUS:%{http_code}\\\\n\" http://localhost:3000/auth/login)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/_next/static/chunks/styles_globals_0rhi7k0.css)",
+      "Bash(curl -s \"http://localhost:3000/_next/static/chunks/styles_globals_0rhi7k0.css\" -o /c/Users/lclub/projects/adore-system/.compiled-check.css)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/auth/login)",
+      "Bash(git commit -m 'Tailwind CSS スタイル配線完了 *)"
     ]
   }
 }

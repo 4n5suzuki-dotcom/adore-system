@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import '../styles/globals.css'
 
 export const metadata: Metadata = {
   title: 'Adore 面接・給与管理システム',

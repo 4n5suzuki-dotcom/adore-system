@@ -16,8 +16,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="w-full max-w-md">
-        <div className="bg-white p-8 rounded-lg shadow-lg border-l-4 border-wine-red">
-          <h1 className="text-3xl font-bold text-wine-red mb-6 text-center">
+        <div className="card-wine-border">
+          <h1 className="heading-2 mb-6 text-center">
             ログイン
           </h1>
 
@@ -29,28 +29,28 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-gray-800 font-semibold mb-2">
+              <label className="form-label">
                 メール
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                className="form-input"
                 placeholder="your@example.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-gray-800 font-semibold mb-2">
+              <label className="form-label">
                 パスワード
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                className="form-input"
                 placeholder="••••••••"
                 required
               />
@@ -58,7 +58,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-wine-red text-white font-bold py-2 px-4 rounded hover:bg-opacity-90 transition"
+              className="btn-primary w-full"
             >
               ログイン
             </button>

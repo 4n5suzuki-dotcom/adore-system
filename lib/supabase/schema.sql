@@ -203,3 +203,38 @@ CREATE INDEX idx_casts_status ON casts(status);
 CREATE INDEX idx_customers_tenant_id ON customers(tenant_id);
 CREATE INDEX idx_cast_performance_cast_id ON cast_performance(cast_id);
 CREATE INDEX idx_cast_performance_month ON cast_performance(month);
+
+-- フィーチャーフラグ管理テーブル（各機能の ON/OFF・ロールアウト率を制御）
+CREATE TABLE IF NOT EXISTS feature_flags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  description TEXT,
+  enabled BOOLEAN DEFAULT false,
+  rollout_percentage INT CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100) DEFAULT 0,
+  phase INT DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- PostgreSQL ではインライン COMMENT が使えないため、列コメントは別文で付与
+COMMENT ON COLUMN feature_flags.phase IS '1=フェーズ1, 2=フェーズ2, 3=フェーズ3';
+
+-- 初期フラグ（フェーズ1 は全部 true、フェーズ2 は false）
+INSERT INTO feature_flags (key, name, description, enabled, rollout_percentage, phase)
+VALUES
+  ('dashboard_adoption', '採用ダッシュボード', 'ダッシュボード表示', true, 100, 1),
+  ('interview_reminders', '面接前リマインダー', 'リマインダー機能', true, 100, 1),
+  ('document_management', '書類管理', '面接書類管理', false, 0, 1),
+  ('cast_mypage', 'キャストマイページ', 'キャスト向けマイページ', false, 0, 1),
+  ('memo_system', 'メモ・申し送り', 'メモ編集機能', true, 100, 1),
+  ('candidate_photo_upload', '写真アップロード', '写真保存機能', false, 0, 1),
+  ('status_notifications', 'ステータス通知', 'ステータス変更通知', true, 100, 1),
+  ('followup_alerts', '体入後フォロー', '体入後アラート', false, 0, 1),
+  ('cast_performance_tracking', '在籍キャスト稼働状況', 'キャスト稼働管理', false, 0, 1),
+  ('sales_prediction', 'キャスト売上予測', 'AI 売上予測', false, 0, 2),
+  ('customer_management', '顧客管理', '会員管理機能', false, 0, 2),
+  ('salary_calculation', '給与計算エンジン', '給与自動計算', false, 0, 2),
+  ('sales_management', '売上管理', '売上分析・管理', false, 0, 2),
+  ('ai_support', 'AI 経営サポート', 'Claude API 統合', false, 0, 2)
+ON CONFLICT (key) DO NOTHING;

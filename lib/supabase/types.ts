@@ -173,3 +173,16 @@ export interface CastCustomerRelation {
   memo: string | null
   created_at: string
 }
+
+// フィーチャーフラグ
+export interface FeatureFlag {
+  id: string
+  key: string
+  name: string
+  description: string | null
+  enabled: boolean
+  rollout_percentage: number
+  phase: number
+  created_at: string
+  updated_at: string
+}

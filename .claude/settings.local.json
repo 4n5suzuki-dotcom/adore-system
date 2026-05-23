@@ -29,7 +29,20 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/admin/interviews/test-id/edit\")",
       "Bash(curl -s \"http://localhost:3000/admin/interviews/test-id/edit\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/interview\")",
-      "Bash(curl -s \"http://localhost:3000/interview\")"
+      "Bash(curl -s \"http://localhost:3000/interview\")",
+      "Bash(node .tmp-tenant-check.mjs)",
+      "Bash(node .tmp-tenant-check2.mjs)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "Bash(git commit -m 'サンプル面接データ投入用 SQL を追加（営業デモ用 10件） *)",
+      "Bash(git branch *)",
+      "Bash(gh repo *)",
+      "Bash(git commit -m 'README と .env.example を作成 *)",
+      "Bash(git push *)",
+      "Bash(gh api *)",
+      "Bash(node .tmp-ff-check.mjs)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/admin/settings/features\")",
+      "Bash(curl -s \"http://localhost:3000/admin/settings/features\")"
     ]
   }
 }

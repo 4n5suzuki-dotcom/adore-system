@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { signOut, getCurrentUser } from '@/lib/supabase/auth'
 import {
   getInterviewsForMonth,
@@ -143,10 +144,30 @@ export default function AdminPage() {
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-10">
         {/* サマリーカード 4 個 */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <SummaryCard icon="📋" label="今日の面接数" value={`${todayCount}件`} />
-          <SummaryCard icon="📊" label="今月面接数" value={`${monthlyCount}件`} />
-          <SummaryCard icon="✅" label="今月採用数" value={`${monthlyAdoptedCount}件`} />
-          <SummaryCard icon="📈" label="採用率" value={`${adoptionRate.toFixed(1)}%`} />
+          <SummaryCard
+            icon="📋"
+            label="今日の面接数"
+            value={`${todayCount}件`}
+            href="/admin/analytics/today"
+          />
+          <SummaryCard
+            icon="📊"
+            label="今月面接数"
+            value={`${monthlyCount}件`}
+            href="/admin/analytics/interviews"
+          />
+          <SummaryCard
+            icon="✅"
+            label="今月採用数"
+            value={`${monthlyAdoptedCount}件`}
+            href="/admin/analytics/hired"
+          />
+          <SummaryCard
+            icon="📈"
+            label="採用率"
+            value={`${adoptionRate.toFixed(1)}%`}
+            href="/admin/analytics/adoption-rate"
+          />
         </section>
 
         {/* 最新面接一覧 */}
@@ -228,16 +249,31 @@ function SummaryCard({
   icon,
   label,
   value,
+  href,
 }: {
   icon: string
   label: string
   value: string
+  href?: string
 }) {
-  return (
-    <div className="card-wine-border">
+  const content = (
+    <>
       <div className="text-3xl mb-2">{icon}</div>
       <p className="heading-1">{value}</p>
       <p className="text-muted mt-1">{label}</p>
-    </div>
+    </>
   )
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="card-wine-border block cursor-pointer transition hover:shadow-xl hover:-translate-y-0.5"
+      >
+        {content}
+      </Link>
+    )
+  }
+
+  return <div className="card-wine-border">{content}</div>
 }

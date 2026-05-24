@@ -1,5 +1,5 @@
 import { supabase } from '../supabase'
-import type { Interview } from './types'
+import type { Interview, InterviewPhoto } from './types'
 
 // 指定した「年・月」の UTC 範囲 [start, end) を返すヘルパー
 function monthRange(year: number, month: number): { start: string; end: string } {
@@ -164,6 +164,22 @@ export async function getInterviewById(id: string): Promise<Interview | null> {
     return null
   }
   return data as Interview
+}
+
+// 面接の写真を取得
+export async function getInterviewPhotos(interviewId: string) {
+  const { data, error } = await supabase
+    .from('interview_photos')
+    .select('*')
+    .eq('interview_id', interviewId)
+    .order('photo_num', { ascending: true })
+
+  if (error) {
+    console.error('Failed to fetch interview photos:', error)
+    return []
+  }
+
+  return (data || []) as InterviewPhoto[]
 }
 
 /** 面接ステータスを更新 */

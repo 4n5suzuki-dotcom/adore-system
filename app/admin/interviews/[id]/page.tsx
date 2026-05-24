@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import {
   getInterviewById,
+  getInterviewPhotos,
   updateInterviewStatus,
   updateInterviewMemo,
 } from '@/lib/supabase/interviews'
-import type { Interview } from '@/lib/supabase/types'
+import type { Interview, InterviewPhoto } from '@/lib/supabase/types'
 
 // ステータス → ラベル + バッジ色（Tailwind が検出できるよう完全なクラス名で定義）
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
@@ -62,6 +63,8 @@ export default function InterviewDetailPage() {
   const id = params.id
 
   const [interview, setInterview] = useState<Interview | null>(null)
+  const [photos, setPhotos] = useState<InterviewPhoto[]>([])
+  const [zoomPhoto, setZoomPhoto] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -72,8 +75,12 @@ export default function InterviewDetailPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await getInterviewById(id)
+        const [data, photoData] = await Promise.all([
+          getInterviewById(id),
+          getInterviewPhotos(id),
+        ])
         setInterview(data)
+        setPhotos(photoData)
         // 成功時に memoText を初期化
         if (data) setMemoText(data.memo ?? '')
       } catch (err) {
@@ -85,6 +92,16 @@ export default function InterviewDetailPage() {
     }
     load()
   }, [id])
+
+  // 拡大表示中は Esc キーで閉じる
+  useEffect(() => {
+    if (!zoomPhoto) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setZoomPhoto(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [zoomPhoto])
 
   // ステータス更新（採用 / 不採用）
   const handleStatusChange = async (newStatus: Interview['status']) => {
@@ -183,6 +200,32 @@ export default function InterviewDetailPage() {
           <InfoRow label="電話" value={orEmpty(interview.phone)} />
           <InfoRow label="LINE ID" value={orEmpty(interview.line_id)} />
         </section>
+
+        {/* セクション 1.5: 応募者写真 */}
+        <div className="card-wine-border p-6 mb-6">
+          <h2 className="heading-2 text-2xl font-bold text-wine-red mb-4">応募者写真</h2>
+
+          {photos.length > 0 ? (
+            <div className="grid grid-cols-3 gap-4">
+              {photos.map((photo) => (
+                <div key={photo.id} className="overflow-hidden rounded border border-gray-300">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photo.photo_url}
+                    alt={`写真 ${photo.photo_num}`}
+                    className="w-full h-48 object-cover cursor-pointer hover:opacity-80 transition"
+                    onClick={() => setZoomPhoto(photo.photo_url)}
+                    onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="14" fill="%23999"%3E画像がありません%3C/text%3E%3C/svg%3E'
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600">写真がまだ登録されていません</p>
+          )}
+        </div>
 
         {/* セクション 2: 現住所・本籍地 */}
         <section className="card-wine-border">
@@ -300,6 +343,32 @@ export default function InterviewDetailPage() {
           </div>
         </section>
       </main>
+
+      {/* 写真拡大モーダル */}
+      {zoomPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800/90 p-4"
+          onClick={() => setZoomPhoto(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={zoomPhoto}
+            alt="拡大写真"
+            className="max-h-full max-w-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            onClick={() => setZoomPhoto(null)}
+            aria-label="閉じる"
+            className="absolute top-4 right-6 text-white text-4xl font-bold leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   )
 }

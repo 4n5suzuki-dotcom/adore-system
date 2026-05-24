@@ -42,7 +42,10 @@
       "Bash(gh api *)",
       "Bash(node .tmp-ff-check.mjs)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/admin/settings/features\")",
-      "Bash(curl -s \"http://localhost:3000/admin/settings/features\")"
+      "Bash(curl -s \"http://localhost:3000/admin/settings/features\")",
+      "Bash(npx tsc *)",
+      "PowerShell(Get-Command *)",
+      "Bash(node *)"
     ]
   }
 }

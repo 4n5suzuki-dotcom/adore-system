@@ -71,9 +71,22 @@ CREATE TABLE IF NOT EXISTS interviews (
   agreed_back_regulation_version VARCHAR(20),
   agreed_at TIMESTAMP,
   agreed_ip VARCHAR(45),
+  -- 振込先情報
+  bank_name VARCHAR(255),
+  branch_name VARCHAR(255),
+  account_type VARCHAR(20),
+  account_number VARCHAR(20),
+  account_name VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 既存DB向けマイグレーション：振込先情報カラムを追加（新規作成時は上の定義で作成済み）
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS bank_name VARCHAR(255);
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS branch_name VARCHAR(255);
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS account_type VARCHAR(20);
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS account_number VARCHAR(20);
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS account_name VARCHAR(255);
 
 -- 面接履歴
 CREATE TABLE IF NOT EXISTS interviews_history (

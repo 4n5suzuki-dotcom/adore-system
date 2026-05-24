@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signOut, getCurrentUser } from '@/lib/supabase/auth'
 import {
   getInterviewsForMonth,
   getLatestInterviews,
@@ -12,7 +11,7 @@ import {
   getMonthlyAdoptionRate,
   type InterviewStatusCount,
 } from '@/lib/supabase/interviews'
-import type { Interview, User } from '@/lib/supabase/types'
+import type { Interview } from '@/lib/supabase/types'
 
 // ステータス → 表示ラベル + バッジ色（Tailwind が検出できるよう完全なクラス名で定義）
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
@@ -58,7 +57,6 @@ function StatusBadge({ status }: { status: string }) {
 export default function AdminPage() {
   const router = useRouter()
 
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [todayCount, setTodayCount] = useState<number>(0)
   const [monthlyCount, setMonthlyCount] = useState<number>(0)
   const [monthlyAdoptedCount, setMonthlyAdoptedCount] = useState<number>(0)
@@ -80,9 +78,8 @@ export default function AdminPage() {
       const month = now.getMonth() + 1
 
       try {
-        const [user, today, monthInterviews, rate, latest, counts] =
+        const [today, monthInterviews, rate, latest, counts] =
           await Promise.all([
-            getCurrentUser(),
             getTodayInterviewCount(),
             getInterviewsForMonth(year, month),
             getMonthlyAdoptionRate(year, month),
@@ -90,8 +87,6 @@ export default function AdminPage() {
             getInterviewCountByStatus(),
           ])
 
-        // getCurrentUser は Supabase 認証ユーザーを返すため User 型へキャスト
-        setCurrentUser((user as unknown as User) ?? null)
         setTodayCount(today)
         setMonthlyCount(monthInterviews.length)
         setMonthlyAdoptedCount(
@@ -111,11 +106,6 @@ export default function AdminPage() {
     load()
   }, [])
 
-  const handleLogout = async () => {
-    await signOut()
-    router.push('/auth/login')
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -126,21 +116,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ヘッダー */}
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="heading-2">管理画面</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-muted text-sm">
-              {currentUser?.email ?? 'ゲスト'}
-            </span>
-            <button onClick={handleLogout} className="btn-primary">
-              ログアウト
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-10">
         {/* サマリーカード 4 個 */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

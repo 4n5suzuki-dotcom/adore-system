@@ -8,32 +8,63 @@ import type { Interview } from '@/lib/supabase/types'
 const TENANT_ID =
   process.env.NEXT_PUBLIC_TENANT_ID ?? '00000000-0000-0000-0000-000000000000'
 
-const BACK_REGULATION_VERSION = 'v1.0'
+const BACK_REGULATION_VERSION = 'v2.0'
 
-// バック規定（サンプル。実際の規定文に差し替えてください）
-const BACK_REGULATION_TEXT = `【バック規定（サンプル）】 ${BACK_REGULATION_VERSION}
+// バック規定（勤務条件・料金システム・各種バック率）
+const BACK_REGULATION_TEXT = `【勤務条件・バック規定】 ${BACK_REGULATION_VERSION}
 
-第1条（目的）
-本規定は、当店に在籍するキャストの報酬（バック）に関する基準を定めるものです。
+【営業時間】
+月曜～金曜：20:00～3:00
+土曜・日曜・祝日・GW・お盆・正月（変更あり）：21:00～3:00
+来店予定表21時から可能
 
-第2条（時給・バック）
-1. 基本時給は面接時に個別に提示します。
-2. 売上に応じた指名バック・同伴バック・ドリンクバックの料率は別表のとおりとします。
+【定休日】
+記載なし
 
-第3条（出勤・遅刻・欠勤）
-1. シフトは事前申告制とし、無断欠勤・遅刻には所定の控除が適用される場合があります。
-2. 当日キャンセルの取り扱いについては店舗ルールに従うものとします。
+【お客様料金システム】
+・ALL TIME（1セット 60分）：8000円
+・延長（30分）：4000円
+・VIPチャージ：5000円（1名1時間）
 
-第4条（罰則・控除）
-本規定および店舗ルールに違反した場合、報酬から所定額を控除することがあります。
+同伴：3000円
+本指名：3000円
+場内指名：3000円
+サ20%・TAX10%
 
-第5条（個人情報の取り扱い）
-応募および在籍にあたって取得した個人情報は、採用選考・労務管理の目的にのみ利用します。
+【給料システム】
+・時給：出勤日数もしくは売上により変動
 
-第6条（改定）
-本規定は必要に応じて改定されることがあり、改定後の内容は周知された時点から適用されます。
+【勤意報酬】
+月の指名本数0の場合、時給500円ダウン
+（入店時から20回出勤以上のキャスト対象）
+※当日欠勤の場合、以降4回出勤は自払い不可もしくは出勤調整の対象となります
 
-以上の内容を確認し、同意のうえ応募します。`
+※総売上げに対し支給額50%を保証（月の出勤数10日以上対象）
+（ボトル原価とヘルプドリンクバック引き）
+
+【ドリンクバック】
+・ノーマルドリンク：500円
+・指名テーブル含む テキーラ イェーガー：700円
+
+【ボトルバック】
+・小計20%
+
+【指名バック】
+・同伴（本指名バック含む）：4000円
+・本指名：2000円
+・場内指名：1000円
+
+【売上バック】
+・同伴：小計30%※セット料金、個室料金
+・本指名：小計20%※体験入店は40%バック
+
+※小計算方法
+TOTALから他キャストのドリンクバック を引く
+
+【キャスト紹介バック】
+10日出勤でクリアとして1人入店につき3万円～
+もしくは紹介ホステスさん入店初月の売上10%
+どちらか良い方をバックいたします`
 
 const STEPS = [
   '基本情報',
@@ -42,6 +73,7 @@ const STEPS = [
   'プロフィール・嗜好',
   '写真アップロード',
   'バック規定確認・同意',
+  '振込先情報',
   '確認・送信',
 ]
 
@@ -120,6 +152,20 @@ export default function InterviewEntryPage() {
       }
     }
     if (currentStep === 5 && !agreeBackRegulation) return
+    if (currentStep === 6) {
+      if (
+        !formData.bank_name ||
+        !formData.branch_name ||
+        !formData.account_type ||
+        !formData.account_number ||
+        !formData.account_name
+      ) {
+        setError(
+          '振込先情報（銀行名・支店名・口座種別・口座番号・口座名義）をすべて入力してください'
+        )
+        return
+      }
+    }
     setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1))
   }
 
@@ -523,8 +569,87 @@ export default function InterviewEntryPage() {
             </div>
           )}
 
-          {/* Step 7: 確認・送信 */}
+          {/* Step 7: 振込先情報 */}
           {currentStep === 6 && (
+            <div className="mb-8">
+              <h2 className="heading-2 text-2xl mb-4">振込先情報</h2>
+
+              {/* 銀行名 */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  銀行名 <span className="text-red">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.bank_name || ''}
+                  onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
+                  placeholder="例：○○銀行"
+                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                />
+              </div>
+
+              {/* 支店名 */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  支店名 <span className="text-red">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.branch_name || ''}
+                  onChange={(e) => setFormData({ ...formData, branch_name: e.target.value })}
+                  placeholder="例：○○支店"
+                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                />
+              </div>
+
+              {/* 口座種別 */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  口座種別 <span className="text-red">*</span>
+                </label>
+                <select
+                  value={formData.account_type || ''}
+                  onChange={(e) => setFormData({ ...formData, account_type: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                >
+                  <option value="">選択してください</option>
+                  <option value="普通">普通</option>
+                  <option value="当座">当座</option>
+                </select>
+              </div>
+
+              {/* 口座番号 */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  口座番号 <span className="text-red">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.account_number || ''}
+                  onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
+                  placeholder="例：1234567"
+                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                />
+              </div>
+
+              {/* 口座名義 */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  口座名義（カナ） <span className="text-red">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.account_name || ''}
+                  onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
+                  placeholder="例：ヤマダ タロウ"
+                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 8: 確認・送信 */}
+          {currentStep === 7 && (
             <div className="space-y-4">
               <h2 className="heading-2 text-2xl">確認・送信</h2>
               <p className="text-muted text-sm">
@@ -546,6 +671,11 @@ export default function InterviewEntryPage() {
                       : '未同意'
                   }
                 />
+                <SummaryRow label="銀行名" value={formData.bank_name} />
+                <SummaryRow label="支店名" value={formData.branch_name} />
+                <SummaryRow label="口座種別" value={formData.account_type} />
+                <SummaryRow label="口座番号" value={formData.account_number} />
+                <SummaryRow label="口座名義" value={formData.account_name} />
               </dl>
             </div>
           )}

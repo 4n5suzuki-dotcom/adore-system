@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/auth'
+import Sidebar from '@/components/admin/Sidebar'
+import Header from '@/components/admin/Header'
 
 export default function AdminLayout({
   children,
@@ -16,17 +18,14 @@ export default function AdminLayout({
     const checkAuth = async () => {
       const user = await getCurrentUser()
       if (!user) {
-        // ログインしていなければ /auth/login へリダイレクト
         router.push('/auth/login')
         return
       }
-      // ログイン済みなら認証チェック完了
       setChecking(false)
     }
     checkAuth()
   }, [router])
 
-  // 認証チェック中・未ログイン時は管理画面の内容を表示しない
   if (checking) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -35,5 +34,21 @@ export default function AdminLayout({
     )
   }
 
-  return <>{children}</>
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      {/* サイドバー */}
+      <Sidebar />
+
+      {/* メインコンテンツ */}
+      <div className="flex-1 flex flex-col">
+        {/* ヘッダー */}
+        <Header />
+
+        {/* ページ内容 */}
+        <main className="flex-1 p-8">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
 }

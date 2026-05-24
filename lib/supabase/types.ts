@@ -64,6 +64,12 @@ export interface Interview {
   agreed_back_regulation_version: string | null
   agreed_at: string | null
   agreed_ip: string | null
+  // 振込先情報
+  bank_name?: string | null
+  branch_name?: string | null
+  account_type?: string | null
+  account_number?: string | null
+  account_name?: string | null
   created_at: string
   updated_at: string
 }

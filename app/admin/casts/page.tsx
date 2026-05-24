@@ -1,0 +1,126 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import type { Cast } from '@/lib/supabase/types'
+
+export default function CastsPage() {
+  const [casts, setCasts] = useState<Cast[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'active' | 'trial' | 'retired'>('active')
+
+  useEffect(() => {
+    const fetchCasts = async () => {
+      let query = supabase.from('casts').select('*')
+
+      if (filter !== 'all') {
+        query = query.eq('status', filter)
+      }
+
+      const { data, error } = await query.order('joined_date', { ascending: false })
+
+      if (!error && data) {
+        setCasts(data as Cast[])
+      }
+      setLoading(false)
+    }
+
+    fetchCasts()
+  }, [filter])
+
+  if (loading) return <div className="p-8">読み込み中...</div>
+
+  const statusLabel = {
+    active: '在籍中',
+    trial: '体験中',
+    retired: '退店済み'
+  }
+
+  const statusColor = {
+    active: 'bg-green text-white',
+    trial: 'bg-blue text-white',
+    retired: 'bg-gray-400 text-white'
+  }
+
+  return (
+    <div className="min-h-screen bg-white p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* ヘッダー */}
+        <div className="mb-8">
+          <Link href="/admin" className="text-wine-red hover:underline mb-2 inline-block">
+            ← ダッシュボードへ戻る
+          </Link>
+          <h1 className="text-3xl font-bold text-wine-red mt-2">キャスト一覧</h1>
+          <p className="text-gray-600 mt-2">{casts.length} 名</p>
+        </div>
+
+        {/* フィルタボタン */}
+        <div className="flex gap-4 mb-8">
+          {(['all', 'active', 'trial', 'retired'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilter(status)}
+              className={`px-4 py-2 rounded font-bold transition ${
+                filter === status
+                  ? 'bg-wine-red text-white'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-400'
+              }`}
+            >
+              {status === 'all'
+                ? 'すべて'
+                : statusLabel[status as 'active' | 'trial' | 'retired']}
+            </button>
+          ))}
+        </div>
+
+        {/* テーブル */}
+        <div className="card-wine-border overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-wine-red">
+                <th className="text-left p-4 font-bold text-wine-red">氏名</th>
+                <th className="text-left p-4 font-bold text-wine-red">ふりがな</th>
+                <th className="text-left p-4 font-bold text-wine-red">年齢</th>
+                <th className="text-left p-4 font-bold text-wine-red">入店日</th>
+                <th className="text-left p-4 font-bold text-wine-red">ステータス</th>
+                <th className="text-left p-4 font-bold text-wine-red">アクション</th>
+              </tr>
+            </thead>
+            <tbody>
+              {casts.map((cast) => (
+                <tr key={cast.id} className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-semibold">{cast.genshi_name}</td>
+                  <td className="p-4 text-gray-600">{cast.furigana}</td>
+                  <td className="p-4">{cast.age} 歳</td>
+                  <td className="p-4">
+                    {cast.joined_date ? new Date(cast.joined_date).toLocaleDateString('ja-JP') : '—'}
+                  </td>
+                  <td className="p-4">
+                    <span className={`px-3 py-1 rounded text-sm font-bold ${statusColor[cast.status as keyof typeof statusColor]}`}>
+                      {statusLabel[cast.status as keyof typeof statusLabel]}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <Link
+                      href={`/admin/casts/${cast.id}`}
+                      className="text-wine-red hover:underline"
+                    >
+                      詳細
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {casts.length === 0 && (
+            <div className="text-center py-8 text-gray-600">
+              キャストが見つかりません
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

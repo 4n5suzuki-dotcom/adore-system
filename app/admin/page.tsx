@@ -240,6 +240,19 @@ export default function AdminPage() {
             ))}
           </div>
         </section>
+
+        {/* キャスト管理セクション */}
+        <div className="mt-12 pt-12 border-t border-gray-200">
+          <h2 className="heading-2 text-2xl font-bold text-wine-red mb-6">キャスト管理</h2>
+
+          <Link href="/admin/casts">
+            <div className="card-wine-border p-6 cursor-pointer hover:shadow-xl transition hover:-translate-y-0.5">
+              <p className="text-gray-600">在籍キャスト</p>
+              <div className="text-4xl font-bold text-wine-red mt-2">管理</div>
+              <p className="text-gray-600 mt-2 text-sm">一覧を見る →</p>
+            </div>
+          </Link>
+        </div>
       </main>
     </div>
   )

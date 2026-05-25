@@ -318,6 +318,9 @@ function CastDetailContent() {
                         if (hasShift) {
                           const normalizedTime = `${hasShift.start_time.slice(0, 5)}-${hasShift.end_time.slice(0, 5)}`
                           setSelectedTimeSlot(normalizedTime)
+                        } else {
+                          // 新規日付は select の表示既定値と state を一致させる（未操作のまま保存しても登録される）
+                          setSelectedTimeSlot('20:00-03:00')
                         }
                         setShowTimeModal(true)
                       }}
@@ -343,46 +346,47 @@ function CastDetailContent() {
             {/* 時間帯選択モーダル */}
             {showTimeModal && selectedDate && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div className="bg-white rounded p-6 w-80 shadow-lg">
+                <div className="bg-white rounded p-6 w-96 shadow-lg">
                   <h4 className="text-lg font-bold text-wine-red mb-4">
                     {new Date(`${selectedDate}T00:00:00`).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })} の出勤時間
                   </h4>
 
-                  {/* 時間帯選択 */}
-                  <div className="space-y-3 mb-6">
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="timeSlot"
-                        value="20:00-03:00"
-                        checked={selectedTimeSlot === '20:00-03:00'}
-                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">20:00 ～ 03:00（フル）</span>
-                    </label>
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="timeSlot"
-                        value="21:00-03:00"
-                        checked={selectedTimeSlot === '21:00-03:00'}
-                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">21:00 ～ 03:00</span>
-                    </label>
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="timeSlot"
-                        value="20:00-00:00"
-                        checked={selectedTimeSlot === '20:00-00:00'}
-                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">20:00 ～ 00:00</span>
-                    </label>
+                  {/* 開始時間 */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">開始時間</label>
+                    <select
+                      value={selectedTimeSlot.split('-')[0] || '20:00'}
+                      onChange={(e) => {
+                        const endTime = selectedTimeSlot.split('-')[1] || '03:00'
+                        setSelectedTimeSlot(`${e.target.value}-${endTime}`)
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                    >
+                      <option value="20:00">20:00</option>
+                      <option value="20:30">20:30</option>
+                      <option value="21:00">21:00</option>
+                      <option value="21:30">21:30</option>
+                      <option value="22:00">22:00</option>
+                    </select>
+                  </div>
+
+                  {/* 終了時間 */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">終了時間</label>
+                    <select
+                      value={selectedTimeSlot.split('-')[1] || '03:00'}
+                      onChange={(e) => {
+                        const startTime = selectedTimeSlot.split('-')[0] || '20:00'
+                        setSelectedTimeSlot(`${startTime}-${e.target.value}`)
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                    >
+                      <option value="00:00">00:00</option>
+                      <option value="01:00">01:00</option>
+                      <option value="02:00">02:00</option>
+                      <option value="03:00">03:00</option>
+                      <option value="04:00">04:00</option>
+                    </select>
                   </div>
 
                   {/* ボタン */}

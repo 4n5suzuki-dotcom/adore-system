@@ -78,48 +78,74 @@ export default function CastsPage() {
           ))}
         </div>
 
-        {/* テーブル */}
-        <div className="card-wine-border overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-wine-red">
-                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">氏名</th>
-                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">入店日</th>
-                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">ステータス</th>
-                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">アクション</th>
-              </tr>
-            </thead>
-            <tbody>
+        {/* 一覧（モバイル：カード / PC：テーブル） */}
+        {casts.length === 0 ? (
+          <div className="card-wine-border text-center py-8 text-gray-600">
+            キャストが見つかりません
+          </div>
+        ) : (
+          <>
+            {/* モバイル：カード表示 */}
+            <div className="block md:hidden space-y-3">
               {casts.map((cast) => (
-                <tr key={cast.id} className="border-b hover:bg-gray-50">
-                  <td className="p-2 md:p-4 text-sm md:text-base font-semibold whitespace-nowrap">{cast.genshi_name}</td>
-                  <td className="p-2 md:p-4 text-sm md:text-base">
-                    {cast.joined_date ? new Date(cast.joined_date).toLocaleDateString('ja-JP') : '—'}
-                  </td>
-                  <td className="p-2 md:p-4 text-sm md:text-base">
-                    <span className={`px-3 py-1 rounded text-sm font-bold ${statusColor[cast.status as keyof typeof statusColor]}`}>
+                <Link
+                  key={cast.id}
+                  href={`/admin/casts/${cast.id}`}
+                  className="card-wine-border block p-4 hover:bg-gray-50 transition"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-base font-bold">{cast.genshi_name}</span>
+                    <span className={`px-3 py-1 rounded text-xs font-bold whitespace-nowrap ${statusColor[cast.status as keyof typeof statusColor]}`}>
                       {statusLabel[cast.status as keyof typeof statusLabel]}
                     </span>
-                  </td>
-                  <td className="p-2 md:p-4 text-sm md:text-base">
-                    <Link
-                      href={`/admin/casts/${cast.id}`}
-                      className="text-wine-red hover:underline"
-                    >
-                      詳細
-                    </Link>
-                  </td>
-                </tr>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    入店日：{cast.joined_date ? new Date(cast.joined_date).toLocaleDateString('ja-JP') : '—'}
+                  </p>
+                </Link>
               ))}
-            </tbody>
-          </table>
-
-          {casts.length === 0 && (
-            <div className="text-center py-8 text-gray-600">
-              キャストが見つかりません
             </div>
-          )}
-        </div>
+
+            {/* PC：テーブル表示 */}
+            <div className="hidden md:block">
+              <div className="card-wine-border overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-wine-red">
+                      <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">氏名</th>
+                      <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">入店日</th>
+                      <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">ステータス</th>
+                      <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">アクション</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {casts.map((cast) => (
+                      <tr key={cast.id} className="border-b hover:bg-gray-50">
+                        <td className="p-2 md:p-4 text-sm md:text-base font-semibold whitespace-nowrap">{cast.genshi_name}</td>
+                        <td className="p-2 md:p-4 text-sm md:text-base">
+                          {cast.joined_date ? new Date(cast.joined_date).toLocaleDateString('ja-JP') : '—'}
+                        </td>
+                        <td className="p-2 md:p-4 text-sm md:text-base">
+                          <span className={`px-3 py-1 rounded text-sm font-bold ${statusColor[cast.status as keyof typeof statusColor]}`}>
+                            {statusLabel[cast.status as keyof typeof statusLabel]}
+                          </span>
+                        </td>
+                        <td className="p-2 md:p-4 text-sm md:text-base">
+                          <Link
+                            href={`/admin/casts/${cast.id}`}
+                            className="text-wine-red hover:underline"
+                          >
+                            詳細
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

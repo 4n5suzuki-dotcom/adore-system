@@ -159,53 +159,77 @@ export default function AnalyticsInterviewsPage() {
           )}
         </div>
 
-        {/* テーブル */}
-        <div className="card-wine-border overflow-x-auto">
-          <table className="w-full text-left min-w-max">
-            <thead>
-              <tr className="border-b border-wine-red">
-                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">氏名</th>
-                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">面接日</th>
-                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">ステータス</th>
-                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red text-right">アクション</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleInterviews.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="p-8 text-center text-muted">
-                    該当する面接データがありません
-                  </td>
-                </tr>
-              ) : (
-                visibleInterviews.map((interview) => (
-                  <tr
-                    key={interview.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="p-2 md:p-4 text-xs md:text-sm font-semibold text-gray-800">
+        {/* 一覧（モバイル：カード / PC：テーブル） */}
+        {visibleInterviews.length === 0 ? (
+          <div className="card-wine-border text-center py-8 text-muted">
+            該当する面接データがありません
+          </div>
+        ) : (
+          <>
+            {/* モバイル：カード表示 */}
+            <div className="block md:hidden space-y-3">
+              {visibleInterviews.map((interview) => (
+                <Link
+                  key={interview.id}
+                  href={`/admin/interviews/${interview.id}`}
+                  className="card-wine-border block p-4 hover:bg-gray-50 transition"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-base font-bold text-gray-800">
                       {interview.genshi_name || '-'}
-                    </td>
-                    <td className="p-2 md:p-4 text-xs md:text-sm text-gray-600">
-                      {formatDate(interview.created_at)}
-                    </td>
-                    <td className="p-2 md:p-4 text-xs md:text-sm">
-                      <StatusBadge status={interview.status} />
-                    </td>
-                    <td className="p-2 md:p-4 text-xs md:text-sm text-right">
-                      <Link
-                        href={`/admin/interviews/${interview.id}`}
-                        className="text-wine-red font-semibold hover:underline"
+                    </span>
+                    <StatusBadge status={interview.status} />
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    面接日：{formatDate(interview.created_at)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+
+            {/* PC：テーブル表示 */}
+            <div className="hidden md:block">
+              <div className="card-wine-border overflow-x-auto">
+                <table className="w-full text-left min-w-max">
+                  <thead>
+                    <tr className="border-b border-wine-red">
+                      <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">氏名</th>
+                      <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">面接日</th>
+                      <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">ステータス</th>
+                      <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red text-right">アクション</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleInterviews.map((interview) => (
+                      <tr
+                        key={interview.id}
+                        className="border-b border-gray-200 hover:bg-gray-50"
                       >
-                        詳細
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                        <td className="p-2 md:p-4 text-xs md:text-sm font-semibold text-gray-800">
+                          {interview.genshi_name || '-'}
+                        </td>
+                        <td className="p-2 md:p-4 text-xs md:text-sm text-gray-600">
+                          {formatDate(interview.created_at)}
+                        </td>
+                        <td className="p-2 md:p-4 text-xs md:text-sm">
+                          <StatusBadge status={interview.status} />
+                        </td>
+                        <td className="p-2 md:p-4 text-xs md:text-sm text-right">
+                          <Link
+                            href={`/admin/interviews/${interview.id}`}
+                            className="text-wine-red font-semibold hover:underline"
+                          >
+                            詳細
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

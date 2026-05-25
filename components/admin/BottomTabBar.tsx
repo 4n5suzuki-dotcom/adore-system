@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const tabs = [
   { label: '📊 ダッシュ', href: '/admin', icon: '📊' },
-  { label: '📋 面接', href: '/admin/interviews', icon: '📋' },
+  { label: '📋 面接', href: '/admin/analytics/interviews', icon: '📋' },
   { label: '👥 キャスト', href: '/admin/casts', icon: '👥' },
   { label: '📅 稼働', href: '/admin/shifts', icon: '📅' },
   { label: '⚙️ その他', href: '/admin/analytics/sales', icon: '⚙️' }

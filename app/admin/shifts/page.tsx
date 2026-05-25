@@ -10,6 +10,8 @@ export default function ShiftsPage() {
   const [shifts, setShifts] = useState<ShiftSchedule[]>([])
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [loading, setLoading] = useState(true)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
 
   // キャスト一覧 + 当月シフト取得
   useEffect(() => {
@@ -138,47 +140,49 @@ export default function ShiftsPage() {
             </button>
           </div>
 
-          {/* カレンダーグリッド */}
-          <div className="bg-white rounded border border-gray-200 overflow-hidden">
-            {/* 曜日ヘッダー */}
-            <div className="grid grid-cols-7 gap-0 border-b border-gray-200 min-w-max md:min-w-fit">
-              {['日', '月', '火', '水', '木', '金', '土'].map((day) => (
-                <div key={day} className="p-3 text-center font-bold bg-wine-red text-white text-sm">
-                  {day}
-                </div>
-              ))}
-            </div>
+          {/* 1行リスト形式カレンダー */}
+          <div className="space-y-2">
+            {Array.from({
+              length: new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate()
+            }).map((_, i) => {
+              const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i + 1)
+              const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+              const workerCount = shiftsCountByDate[dateStr] || 0
+              const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()]
 
-            {/* 日付セル */}
-            <div className="grid grid-cols-7 gap-0 overflow-x-auto">
-              {Array.from({
-                length: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
-              }).map((_, i) => (
-                <div key={`empty-${i}`} className="p-4 bg-gray-100 border-r border-b border-gray-200 h-20 md:h-24"></div>
-              ))}
-
-              {Array.from({
-                length: new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate()
-              }).map((_, i) => {
-                const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i + 1)
-                const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-                const workerCount = shiftsCountByDate[dateStr] || 0
-
-                return (
-                  <div
-                    key={dateStr}
-                    className="p-2 md:p-3 border-r border-b border-gray-200 h-20 md:h-24 bg-white hover:bg-gray-50 transition flex flex-col"
-                  >
-                    <div className="font-bold text-wine-red mb-2">{i + 1}</div>
+              return (
+                <div
+                  key={dateStr}
+                  className={`flex items-center justify-between p-3 rounded border-l-4 transition ${
+                    workerCount > 0
+                      ? 'bg-gold border-l-wine-red'
+                      : 'bg-gray-50 border-l-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-20">
+                      <p className="font-bold text-wine-red text-sm md:text-base">
+                        {i + 1}日（{dayOfWeek}）
+                      </p>
+                    </div>
                     {workerCount > 0 && (
-                      <div className="text-sm bg-wine-red text-white px-2 py-1 rounded">
-                        👥 {workerCount}名
+                      <div className="text-sm text-wine-red font-semibold">
+                        👥 {workerCount}名出勤
                       </div>
                     )}
                   </div>
-                )
-              })}
-            </div>
+                  <button
+                    onClick={() => {
+                      setSelectedDate(dateStr)
+                      setShowDetailsModal(true)
+                    }}
+                    className="px-3 py-1 md:px-4 md:py-2 bg-wine-red text-white rounded text-xs md:text-sm hover:opacity-90"
+                  >
+                    詳細
+                  </button>
+                </div>
+              )
+            })}
           </div>
         </div>
 
@@ -210,6 +214,68 @@ export default function ShiftsPage() {
           </div>
         </div>
       </div>
+
+      {/* 日別出勤者 詳細モーダル */}
+      {showDetailsModal && selectedDate && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowDetailsModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(() => {
+              const dayShifts = shifts.filter((s) => s.shift_date === selectedDate)
+              const dayWorkers = casts.filter((cast) =>
+                dayShifts.some((s) => s.cast_id === cast.id)
+              )
+              const d = new Date(selectedDate)
+              const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()]
+              const title = `${d.getMonth() + 1}月${d.getDate()}日（${dayOfWeek}）の出勤者`
+
+              return (
+                <>
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h3 className="text-lg font-bold text-wine-red">{title}</h3>
+                    <button
+                      onClick={() => setShowDetailsModal(false)}
+                      className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                      aria-label="閉じる"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="p-4">
+                    {dayWorkers.length === 0 ? (
+                      <p className="text-gray-600">この日の出勤予定者はいません</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {dayWorkers.map((cast) => {
+                          const shift = dayShifts.find((s) => s.cast_id === cast.id)
+                          return (
+                            <div
+                              key={cast.id}
+                              className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                            >
+                              <span className="font-bold text-wine-red">{cast.genshi_name}</span>
+                              {shift && (
+                                <span className="text-sm bg-wine-red text-white px-3 py-1 rounded">
+                                  {shift.start_time.slice(0, 5)} ～ {shift.end_time.slice(0, 5)}
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

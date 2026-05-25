@@ -46,7 +46,7 @@ export default function AdminLayout({
         <Header />
 
         {/* ページ内容 */}
-        <main className="flex-1 p-8 pb-20 md:pb-8">
+        <main className="flex-1 px-4 py-6 pb-20 md:px-8 md:py-8 md:pb-8">
           {children}
         </main>
       </div>

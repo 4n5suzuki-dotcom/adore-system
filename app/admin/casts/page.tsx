@@ -84,8 +84,6 @@ export default function CastsPage() {
             <thead>
               <tr className="border-b border-wine-red">
                 <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">氏名</th>
-                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">ふりがな</th>
-                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">年齢</th>
                 <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">入店日</th>
                 <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">ステータス</th>
                 <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">アクション</th>
@@ -95,8 +93,6 @@ export default function CastsPage() {
               {casts.map((cast) => (
                 <tr key={cast.id} className="border-b hover:bg-gray-50">
                   <td className="p-2 md:p-4 text-sm md:text-base font-semibold whitespace-nowrap">{cast.genshi_name}</td>
-                  <td className="p-2 md:p-4 text-sm md:text-base text-gray-600 whitespace-nowrap">{cast.furigana}</td>
-                  <td className="p-2 md:p-4 text-sm md:text-base">{cast.age} 歳</td>
                   <td className="p-2 md:p-4 text-sm md:text-base">
                     {cast.joined_date ? new Date(cast.joined_date).toLocaleDateString('ja-JP') : '—'}
                   </td>

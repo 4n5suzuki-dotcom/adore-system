@@ -165,7 +165,6 @@ export default function AnalyticsInterviewsPage() {
             <thead>
               <tr className="border-b border-wine-red">
                 <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">氏名</th>
-                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">メール</th>
                 <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">面接日</th>
                 <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">ステータス</th>
                 <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red text-right">アクション</th>
@@ -174,7 +173,7 @@ export default function AnalyticsInterviewsPage() {
             <tbody>
               {visibleInterviews.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-muted">
+                  <td colSpan={4} className="p-8 text-center text-muted">
                     該当する面接データがありません
                   </td>
                 </tr>
@@ -187,7 +186,6 @@ export default function AnalyticsInterviewsPage() {
                     <td className="p-2 md:p-4 text-xs md:text-sm font-semibold text-gray-800">
                       {interview.genshi_name || '-'}
                     </td>
-                    <td className="p-2 md:p-4 text-xs md:text-sm text-gray-600">{interview.email}</td>
                     <td className="p-2 md:p-4 text-xs md:text-sm text-gray-600">
                       {formatDate(interview.created_at)}
                     </td>

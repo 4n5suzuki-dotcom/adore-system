@@ -1,4 +1,3 @@
-'use strict'
 // @ts-nocheck
 
 import { supabase } from '../supabase'

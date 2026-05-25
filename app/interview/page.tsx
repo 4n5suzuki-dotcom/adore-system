@@ -522,7 +522,7 @@ export default function InterviewEntryPage() {
 
               {photos.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {photos.map((file, i) => (
+                  {photos.map((_file, i) => (
                     <div key={i} className="relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img

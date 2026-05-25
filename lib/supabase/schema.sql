@@ -205,6 +205,29 @@ CREATE TABLE IF NOT EXISTS cast_customer_relations (
   UNIQUE(cast_id, customer_id)
 );
 
+-- シフトスケジュール（キャスト稼働スケジュール）
+CREATE TABLE IF NOT EXISTS shift_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  cast_id UUID NOT NULL REFERENCES casts(id) ON DELETE CASCADE,
+  shift_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  memo TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  -- 同一キャストは同じ日に1件のみ登録可
+  UNIQUE(cast_id, shift_date)
+);
+
+-- shift_schedules のインデックス
+-- （PostgreSQL では CREATE TABLE 内のインライン INDEX 定義が使えないため別文で作成）
+CREATE INDEX IF NOT EXISTS idx_shift_schedules_cast_id ON shift_schedules(cast_id);
+CREATE INDEX IF NOT EXISTS idx_shift_schedules_shift_date ON shift_schedules(shift_date);
+
+-- RLS（開発中は無効。本番では casts 同様 authenticated 向けポリシーを推奨）
+ALTER TABLE shift_schedules DISABLE ROW LEVEL SECURITY;
+
 -- インデックス作成
 CREATE INDEX idx_users_tenant_id ON users(tenant_id);
 CREATE INDEX idx_users_status ON users(status);

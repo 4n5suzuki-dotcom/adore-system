@@ -156,6 +156,19 @@ export interface CastPerformance {
   updated_at: string
 }
 
+// シフトスケジュール（キャスト稼働スケジュール）
+export interface ShiftSchedule {
+  id: string
+  tenant_id: string
+  cast_id: string
+  shift_date: string // YYYY-MM-DD
+  start_time: string // HH:MM
+  end_time: string // HH:MM
+  memo?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Customer {
   id: string
   tenant_id: string

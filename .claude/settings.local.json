@@ -48,7 +48,9 @@
       "Bash(node *)",
       "mcp__ide__getDiagnostics",
       "Bash(git rev-list *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(git mv *)"
     ]
   }
 }

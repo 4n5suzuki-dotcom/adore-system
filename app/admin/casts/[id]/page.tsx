@@ -4,7 +4,13 @@ import { Suspense, useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import type { Cast, CastPerformance } from '@/lib/supabase/types'
+import { DEFAULT_TENANT_ID } from '@/lib/constants'
+import type { Cast, CastPerformance, ShiftSchedule } from '@/lib/supabase/types'
+
+// JST でずれないようローカル日付から YYYY-MM-DD を組み立てる（toISOString は UTC 変換で1日ずれる）
+function toLocalDateStr(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
 
 function CastDetailContent() {
   const params = useParams<{ id: string }>()
@@ -15,6 +21,13 @@ function CastDetailContent() {
   const [cast, setCast] = useState<Cast | null>(null)
   const [performances, setPerformances] = useState<CastPerformance[]>([])
   const [loading, setLoading] = useState(true)
+
+  // 出勤スケジュール用 state
+  const [shiftMonth, setShiftMonth] = useState(new Date())
+  const [showTimeModal, setShowTimeModal] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('')
+  const [shifts, setShifts] = useState<Record<string, ShiftSchedule>>({})
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +59,38 @@ function CastDetailContent() {
     fetchData()
   }, [id])
 
+  // 既存シフトを取得（月変更時に再取得）
+  useEffect(() => {
+    const fetchShifts = async () => {
+      if (!cast?.id) return
+
+      const monthStart = toLocalDateStr(new Date(shiftMonth.getFullYear(), shiftMonth.getMonth(), 1))
+      const monthEnd = toLocalDateStr(new Date(shiftMonth.getFullYear(), shiftMonth.getMonth() + 1, 0))
+
+      const { data } = await supabase
+        .from('shift_schedules')
+        .select('*')
+        .eq('cast_id', cast.id)
+        .gte('shift_date', monthStart)
+        .lte('shift_date', monthEnd)
+
+      if (data) {
+        const shiftMap = data.reduce((acc, shift) => {
+          // PostgreSQL の TIME は HH:MM:SS で返るため HH:MM に正規化（ラジオ値と一致させる）
+          acc[shift.shift_date] = {
+            ...shift,
+            start_time: shift.start_time.slice(0, 5),
+            end_time: shift.end_time.slice(0, 5)
+          }
+          return acc
+        }, {} as Record<string, ShiftSchedule>)
+        setShifts(shiftMap)
+      }
+    }
+
+    fetchShifts()
+  }, [cast?.id, shiftMonth])
+
   if (loading) return <div className="p-8">読み込み中...</div>
   if (!cast) return <div className="p-8">キャストが見つかりません</div>
 
@@ -53,6 +98,53 @@ function CastDetailContent() {
     active: '在籍中',
     trial: '体験中',
     retired: '退店済み'
+  }
+
+  // 出勤シフトを保存（同日重複は UNIQUE(cast_id, shift_date) で上書き）
+  const handleSaveShift = async () => {
+    if (!cast?.id || !selectedDate || !selectedTimeSlot) return
+
+    const [startTime, endTime] = selectedTimeSlot.split('-')
+
+    try {
+      const { error } = await supabase
+        .from('shift_schedules')
+        .upsert(
+          {
+            cast_id: cast.id,
+            shift_date: selectedDate,
+            start_time: startTime,
+            end_time: endTime,
+            tenant_id: DEFAULT_TENANT_ID
+          },
+          { onConflict: 'cast_id,shift_date' }
+        )
+
+      if (!error) {
+        // 楽観的更新：DB結果を待たずにローカルの shifts を更新（即座にハイライト）
+        setShifts({
+          ...shifts,
+          [selectedDate]: {
+            id: 'temp-' + Date.now(), // 一時ID
+            cast_id: cast.id,
+            shift_date: selectedDate,
+            start_time: startTime,
+            end_time: endTime,
+            tenant_id: DEFAULT_TENANT_ID,
+            memo: null
+          }
+        })
+
+        alert('シフトを保存しました')
+        setShowTimeModal(false)
+        setSelectedDate(null)
+        setSelectedTimeSlot('')
+      } else {
+        alert('保存に失敗しました：' + error.message)
+      }
+    } catch (err) {
+      alert('エラーが発生しました')
+    }
   }
 
   return (
@@ -171,8 +263,150 @@ function CastDetailContent() {
         {/* 出勤スケジュールタブ */}
         {activeTab === 'shifts' && (
           <div className="p-6 bg-gray-50 rounded">
-            <h3 className="text-lg font-bold text-wine-red mb-4">出勤スケジュール</h3>
-            <p className="text-gray-600">カレンダー実装準備中...</p>
+            <h3 className="text-lg font-bold text-wine-red mb-6">出勤スケジュール</h3>
+
+            {/* 月選択 */}
+            <div className="flex items-center justify-between mb-6 p-4 bg-white rounded border border-gray-200">
+              <button
+                onClick={() => setShiftMonth(new Date(shiftMonth.getFullYear(), shiftMonth.getMonth() - 1))}
+                className="px-3 py-1 bg-wine-red text-white rounded text-sm hover:opacity-90"
+              >
+                ← 前月
+              </button>
+              <h4 className="text-lg font-bold text-wine-red">
+                {shiftMonth.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
+              </h4>
+              <button
+                onClick={() => setShiftMonth(new Date(shiftMonth.getFullYear(), shiftMonth.getMonth() + 1))}
+                className="px-3 py-1 bg-wine-red text-white rounded text-sm hover:opacity-90"
+              >
+                翌月 →
+              </button>
+            </div>
+
+            {/* カレンダーグリッド */}
+            <div className="bg-white rounded border border-gray-200 overflow-hidden">
+              {/* 曜日ヘッダー */}
+              <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
+                {['日', '月', '火', '水', '木', '金', '土'].map((day) => (
+                  <div key={day} className="p-3 text-center font-bold bg-wine-red text-white text-sm">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* 日付セル */}
+              <div className="grid grid-cols-7 gap-0">
+                {Array.from({
+                  length: new Date(shiftMonth.getFullYear(), shiftMonth.getMonth(), 1).getDay()
+                }).map((_, i) => (
+                  <div key={`empty-${i}`} className="p-4 bg-gray-100 border-r border-b border-gray-200"></div>
+                ))}
+
+                {Array.from({
+                  length: new Date(shiftMonth.getFullYear(), shiftMonth.getMonth() + 1, 0).getDate()
+                }).map((_, i) => {
+                  const date = new Date(shiftMonth.getFullYear(), shiftMonth.getMonth(), i + 1)
+                  const dateStr = toLocalDateStr(date)
+                  const hasShift = shifts[dateStr]
+
+                  return (
+                    <button
+                      key={dateStr}
+                      onClick={() => {
+                        setSelectedDate(dateStr)
+                        if (hasShift) {
+                          const normalizedTime = `${hasShift.start_time.slice(0, 5)}-${hasShift.end_time.slice(0, 5)}`
+                          setSelectedTimeSlot(normalizedTime)
+                        }
+                        setShowTimeModal(true)
+                      }}
+                      className={`p-4 border-r border-b border-gray-200 transition text-sm h-20 flex flex-col items-center justify-center ${
+                        hasShift
+                          ? 'bg-gold text-wine-red font-bold hover:opacity-80'
+                          : 'hover:bg-gold hover:text-wine-red'
+                      }`}
+                    >
+                      <div className="font-bold">{i + 1}</div>
+                      {hasShift && (
+                        <div className="text-xs mt-1">
+                          ✅ {hasShift.start_time.slice(0, 5)}
+                        </div>
+                      )}
+                      {!hasShift && <div className="text-xs mt-1">クリック</div>}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* 時間帯選択モーダル */}
+            {showTimeModal && selectedDate && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white rounded p-6 w-80 shadow-lg">
+                  <h4 className="text-lg font-bold text-wine-red mb-4">
+                    {new Date(`${selectedDate}T00:00:00`).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })} の出勤時間
+                  </h4>
+
+                  {/* 時間帯選択 */}
+                  <div className="space-y-3 mb-6">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="timeSlot"
+                        value="20:00-03:00"
+                        checked={selectedTimeSlot === '20:00-03:00'}
+                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">20:00 ～ 03:00（フル）</span>
+                    </label>
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="timeSlot"
+                        value="21:00-03:00"
+                        checked={selectedTimeSlot === '21:00-03:00'}
+                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">21:00 ～ 03:00</span>
+                    </label>
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="timeSlot"
+                        value="20:00-00:00"
+                        checked={selectedTimeSlot === '20:00-00:00'}
+                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">20:00 ～ 00:00</span>
+                    </label>
+                  </div>
+
+                  {/* ボタン */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowTimeModal(false)
+                        setSelectedDate(null)
+                        setSelectedTimeSlot('')
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-400 text-white rounded hover:opacity-90"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={handleSaveShift}
+                      className="flex-1 px-4 py-2 bg-wine-red text-white rounded hover:opacity-90"
+                    >
+                      保存
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

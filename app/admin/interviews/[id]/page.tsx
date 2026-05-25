@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { DEFAULT_TENANT_ID } from '@/lib/constants'
 import {
   getInterviewById,
   getInterviewPhotos,
@@ -142,7 +143,7 @@ export default function InterviewDetailPage() {
       const { data, error: castError } = await supabase
         .from('casts')
         .insert({
-          tenant_id: '80f87308-b305-4d0c-8fb2-a7317e435a17',
+          tenant_id: DEFAULT_TENANT_ID,
           interview_id: interview.id,
           genshi_name: interview.genshi_name || '',
           furigana: interview.furigana || '',

@@ -149,22 +149,22 @@ function CastDetailContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* ヘッダー */}
         <div className="mb-8">
           <Link href="/admin/casts" className="text-wine-red hover:underline mb-2 inline-block">
             ← キャスト一覧へ戻る
           </Link>
-          <h1 className="text-3xl font-bold text-wine-red mt-2">{cast.genshi_name}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-wine-red mt-2">{cast.genshi_name}</h1>
           <p className="text-gray-600 mt-2">{cast.furigana}</p>
         </div>
 
         {/* タブメニュー */}
-        <div className="flex gap-4 border-b border-gray-200 mb-6">
+        <div className="flex gap-2 md:gap-4 border-b border-gray-200 mb-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('info')}
-            className={`px-4 py-2 font-semibold ${
+            className={`px-4 py-2 font-semibold whitespace-nowrap flex-shrink-0 text-sm md:text-base ${
               activeTab === 'info'
                 ? 'border-b-2 border-wine-red text-wine-red'
                 : 'text-gray-600'
@@ -174,7 +174,7 @@ function CastDetailContent() {
           </button>
           <button
             onClick={() => setActiveTab('performance')}
-            className={`px-4 py-2 font-semibold ${
+            className={`px-4 py-2 font-semibold whitespace-nowrap flex-shrink-0 text-sm md:text-base ${
               activeTab === 'performance'
                 ? 'border-b-2 border-wine-red text-wine-red'
                 : 'text-gray-600'
@@ -184,7 +184,7 @@ function CastDetailContent() {
           </button>
           <button
             onClick={() => setActiveTab('shifts')}
-            className={`px-4 py-2 font-semibold ${
+            className={`px-4 py-2 font-semibold whitespace-nowrap flex-shrink-0 text-sm md:text-base ${
               activeTab === 'shifts'
                 ? 'border-b-2 border-wine-red text-wine-red'
                 : 'text-gray-600'
@@ -196,9 +196,9 @@ function CastDetailContent() {
 
         {/* 基本情報タブ */}
         {activeTab === 'info' && (
-          <div className="card-wine-border p-6 mb-8">
-            <h2 className="heading-2 text-2xl font-bold text-wine-red mb-4">基本情報</h2>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="card-wine-border p-4 md:p-6 mb-8">
+            <h2 className="heading-2 text-xl md:text-2xl font-bold text-wine-red mb-4">基本情報</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-gray-600">年齢</p>
                 <p className="text-lg font-semibold">{cast.age} 歳</p>
@@ -254,8 +254,8 @@ function CastDetailContent() {
 
         {/* 月別実績タブ */}
         {activeTab === 'performance' && (
-          <div className="card-wine-border p-6">
-            <h2 className="heading-2 text-2xl font-bold text-wine-red mb-4">月別実績</h2>
+          <div className="card-wine-border p-4 md:p-6">
+            <h2 className="heading-2 text-xl md:text-2xl font-bold text-wine-red mb-4">月別実績</h2>
 
             {performances.length > 0 ? (
               <div className="overflow-x-auto">
@@ -288,7 +288,7 @@ function CastDetailContent() {
 
         {/* 出勤スケジュールタブ */}
         {activeTab === 'shifts' && (
-          <div className="p-6 bg-gray-50 rounded">
+          <div className="p-4 md:p-6 bg-gray-50 rounded">
             <h3 className="text-lg font-bold text-wine-red mb-6">出勤スケジュール</h3>
 
             {/* 月選択 */}
@@ -315,7 +315,7 @@ function CastDetailContent() {
               {/* 曜日ヘッダー */}
               <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
                 {['日', '月', '火', '水', '木', '金', '土'].map((day) => (
-                  <div key={day} className="p-3 text-center font-bold bg-wine-red text-white text-sm">
+                  <div key={day} className="p-1 md:p-3 text-center font-bold bg-wine-red text-white text-xs md:text-sm">
                     {day}
                   </div>
                 ))}
@@ -326,7 +326,7 @@ function CastDetailContent() {
                 {Array.from({
                   length: new Date(shiftMonth.getFullYear(), shiftMonth.getMonth(), 1).getDay()
                 }).map((_, i) => (
-                  <div key={`empty-${i}`} className="p-4 bg-gray-100 border-r border-b border-gray-200"></div>
+                  <div key={`empty-${i}`} className="p-1 md:p-4 bg-gray-100 border-r border-b border-gray-200 h-16 md:h-20"></div>
                 ))}
 
                 {Array.from({
@@ -350,7 +350,7 @@ function CastDetailContent() {
                         }
                         setShowTimeModal(true)
                       }}
-                      className={`p-4 border-r border-b border-gray-200 transition text-sm h-20 flex flex-col items-center justify-center ${
+                      className={`p-1 md:p-4 border-r border-b border-gray-200 transition text-xs md:text-sm h-16 md:h-20 flex flex-col items-center justify-center ${
                         hasShift
                           ? 'bg-gold text-wine-red font-bold hover:opacity-80'
                           : 'hover:bg-gold hover:text-wine-red'
@@ -371,8 +371,8 @@ function CastDetailContent() {
 
             {/* 時間帯選択モーダル */}
             {showTimeModal && selectedDate && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div className="bg-white rounded p-6 w-96 shadow-lg">
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded p-6 w-full max-w-sm shadow-lg">
                   <h4 className="text-lg font-bold text-wine-red mb-4">
                     {new Date(`${selectedDate}T00:00:00`).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })} の出勤時間
                   </h4>

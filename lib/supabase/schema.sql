@@ -228,6 +228,24 @@ CREATE INDEX IF NOT EXISTS idx_shift_schedules_shift_date ON shift_schedules(shi
 -- RLS（開発中は無効。本番では casts 同様 authenticated 向けポリシーを推奨）
 ALTER TABLE shift_schedules DISABLE ROW LEVEL SECURITY;
 
+-- シフト申告アクセストークン（キャスト向けシフト申告URL管理）
+CREATE TABLE IF NOT EXISTS shift_access_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cast_id UUID NOT NULL REFERENCES casts(id) ON DELETE CASCADE,
+  token VARCHAR(32) NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  is_used BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- shift_access_tokens のインデックス
+CREATE INDEX IF NOT EXISTS idx_shift_access_tokens_token ON shift_access_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_shift_access_tokens_cast_id ON shift_access_tokens(cast_id);
+
+-- RLS（開発中は無効。本番ではトークン検証API経由のアクセス制御を推奨）
+ALTER TABLE shift_access_tokens DISABLE ROW LEVEL SECURITY;
+
 -- インデックス作成
 CREATE INDEX idx_users_tenant_id ON users(tenant_id);
 CREATE INDEX idx_users_status ON users(status);

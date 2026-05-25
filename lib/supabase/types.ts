@@ -169,6 +169,17 @@ export interface ShiftSchedule {
   updated_at?: string
 }
 
+// シフト申告アクセストークン（キャスト向けシフト申告URL管理）
+export interface ShiftAccessToken {
+  id: string
+  cast_id: string
+  token: string
+  expires_at: string // ISO 8601
+  is_used: boolean
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Customer {
   id: string
   tenant_id: string

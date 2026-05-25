@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { DEFAULT_TENANT_ID } from '@/lib/constants'
+import { generateShiftAccessToken } from '@/lib/supabase/shifts'
 import type { Cast, CastPerformance, ShiftSchedule } from '@/lib/supabase/types'
 
 // JST でずれないようローカル日付から YYYY-MM-DD を組み立てる（toISOString は UTC 変換で1日ずれる）
@@ -223,6 +224,31 @@ function CastDetailContent() {
                 <p className="text-gray-800">{cast.memo}</p>
               </div>
             )}
+
+            {/* シフト申告URL生成 */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h4 className="text-lg font-bold text-wine-red mb-4">シフト申告URL</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                キャストがシフト申告できるURLを生成します。
+              </p>
+              <button
+                onClick={async () => {
+                  if (!cast?.id) return
+
+                  const token = await generateShiftAccessToken(cast.id, 7)
+                  if (token) {
+                    const url = `${window.location.origin}/public/shifts?token=${token.token}`
+                    alert(`シフト申告URL:\n\n${url}\n\n(有効期限: ${new Date(token.expires_at).toLocaleDateString('ja-JP')})`)
+                    // 将来：クリップボードコピー機能やメール送信機能を追加
+                  } else {
+                    alert('URLの生成に失敗しました')
+                  }
+                }}
+                className="px-6 py-2 bg-wine-red text-white rounded font-semibold hover:opacity-90"
+              >
+                🔗 シフト申告URLを生成
+              </button>
+            </div>
           </div>
         )}
 

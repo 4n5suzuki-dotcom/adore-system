@@ -292,3 +292,15 @@ VALUES
   ('sales_management', '売上管理', '売上分析・管理', false, 0, 2),
   ('ai_support', 'AI 経営サポート', 'Claude API 統合', false, 0, 2)
 ON CONFLICT (key) DO NOTHING;
+
+-- 追加機能フラグ（既存スキーマ構成に合わせて登録。実装済みは true・100%）
+-- ※ salary_calculation / ai_support は上で登録済み（未実装=false）のため重複追加しない
+INSERT INTO feature_flags (key, name, description, enabled, rollout_percentage, phase)
+VALUES
+  ('interview_management', '面接管理', '面接管理機能', true, 100, 1),
+  ('cast_management', 'キャスト管理', 'キャスト管理機能', true, 100, 2),
+  ('shift_calendar', '稼働カレンダー', '稼働カレンダー機能', true, 100, 2),
+  ('shift_self_report', 'シフト自己申告', 'シフト自己申告システム', true, 100, 2),
+  ('dashboard_kpi', 'ダッシュボードKPI', 'ダッシュボード（KPIカード）', true, 100, 2),
+  ('sales_analytics', '売上分析', '売上分析ダッシュボード', true, 100, 2)
+ON CONFLICT (key) DO NOTHING;

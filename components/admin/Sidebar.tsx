@@ -31,7 +31,8 @@ export default function Sidebar() {
         { label: '最新面接', href: '/admin' },
         { label: '今月の面接', href: '/admin/analytics/interviews' },
         { label: '採用者', href: '/admin/analytics/hired' },
-        { label: '採用率分析', href: '/admin/analytics/adoption-rate' }
+        { label: '採用率分析', href: '/admin/analytics/adoption-rate' },
+        { label: '💰 売上分析', href: '/admin/analytics/sales' }
       ]
     },
     {

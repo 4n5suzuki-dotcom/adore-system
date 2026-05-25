@@ -83,29 +83,29 @@ export default function CastsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-wine-red">
-                <th className="text-left p-4 font-bold text-wine-red">氏名</th>
-                <th className="text-left p-4 font-bold text-wine-red">ふりがな</th>
-                <th className="text-left p-4 font-bold text-wine-red">年齢</th>
-                <th className="text-left p-4 font-bold text-wine-red">入店日</th>
-                <th className="text-left p-4 font-bold text-wine-red">ステータス</th>
-                <th className="text-left p-4 font-bold text-wine-red">アクション</th>
+                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">氏名</th>
+                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">ふりがな</th>
+                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">年齢</th>
+                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">入店日</th>
+                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">ステータス</th>
+                <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">アクション</th>
               </tr>
             </thead>
             <tbody>
               {casts.map((cast) => (
                 <tr key={cast.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-semibold">{cast.genshi_name}</td>
-                  <td className="p-4 text-gray-600">{cast.furigana}</td>
-                  <td className="p-4">{cast.age} 歳</td>
-                  <td className="p-4">
+                  <td className="p-2 md:p-4 text-sm md:text-base font-semibold whitespace-nowrap">{cast.genshi_name}</td>
+                  <td className="p-2 md:p-4 text-sm md:text-base text-gray-600 whitespace-nowrap">{cast.furigana}</td>
+                  <td className="p-2 md:p-4 text-sm md:text-base">{cast.age} 歳</td>
+                  <td className="p-2 md:p-4 text-sm md:text-base">
                     {cast.joined_date ? new Date(cast.joined_date).toLocaleDateString('ja-JP') : '—'}
                   </td>
-                  <td className="p-4">
+                  <td className="p-2 md:p-4 text-sm md:text-base">
                     <span className={`px-3 py-1 rounded text-sm font-bold ${statusColor[cast.status as keyof typeof statusColor]}`}>
                       {statusLabel[cast.status as keyof typeof statusLabel]}
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="p-2 md:p-4 text-sm md:text-base">
                     <Link
                       href={`/admin/casts/${cast.id}`}
                       className="text-wine-red hover:underline"

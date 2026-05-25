@@ -105,17 +105,17 @@ export default function SalesPage() {
         </div>
 
         {/* 月選択 */}
-        <div className="flex items-center justify-between mb-8 p-4 bg-gray-50 rounded">
+        <div className="flex items-center justify-between mb-8 p-2 md:p-4 bg-gray-50 rounded gap-2">
           <button
             onClick={handlePrevMonth}
-            className="px-4 py-2 bg-wine-red text-white rounded hover:opacity-90"
+            className="px-2 md:px-4 py-1 md:py-2 bg-wine-red text-white rounded hover:opacity-90 text-xs md:text-sm"
           >
             ← 前月
           </button>
-          <h2 className="text-2xl font-bold text-wine-red">{monthString}</h2>
+          <h2 className="text-lg md:text-2xl font-bold text-wine-red">{monthString}</h2>
           <button
             onClick={handleNextMonth}
-            className="px-4 py-2 bg-wine-red text-white rounded hover:opacity-90"
+            className="px-2 md:px-4 py-1 md:py-2 bg-wine-red text-white rounded hover:opacity-90 text-xs md:text-sm"
           >
             翌月 →
           </button>
@@ -130,9 +130,9 @@ export default function SalesPage() {
 
         {/* グラフ */}
         {salesData.length > 0 ? (
-          <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-            <h3 className="text-xl font-bold text-wine-red mb-6">キャスト別売上ランキング</h3>
-            <ResponsiveContainer width="100%" height={400}>
+          <div className="bg-white rounded-lg shadow-lg p-4 md:p-8 mb-8 overflow-x-auto">
+            <h3 className="text-lg md:text-xl font-bold text-wine-red mb-6">キャスト別売上ランキング</h3>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={salesData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="castName" />
@@ -150,26 +150,26 @@ export default function SalesPage() {
         )}
 
         {/* テーブル */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-white rounded-lg shadow-lg overflow-x-auto">
           <div className="p-6 bg-wine-red text-white">
             <h3 className="text-xl font-bold">売上詳細</h3>
           </div>
-          <table className="w-full">
+          <table className="w-full min-w-max">
             <thead className="bg-gray-100 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-gray-700">順位</th>
-                <th className="px-6 py-4 text-left font-bold text-gray-700">キャスト名</th>
-                <th className="px-6 py-4 text-left font-bold text-gray-700">出勤日数</th>
-                <th className="px-6 py-4 text-left font-bold text-gray-700">売上</th>
+                <th className="px-2 md:px-6 py-2 md:py-4 text-left text-xs md:text-sm font-bold text-gray-700">順位</th>
+                <th className="px-2 md:px-6 py-2 md:py-4 text-left text-xs md:text-sm font-bold text-gray-700">キャスト名</th>
+                <th className="px-2 md:px-6 py-2 md:py-4 text-left text-xs md:text-sm font-bold text-gray-700">出勤日数</th>
+                <th className="px-2 md:px-6 py-2 md:py-4 text-left text-xs md:text-sm font-bold text-gray-700">売上</th>
               </tr>
             </thead>
             <tbody>
               {salesData.map((sale, index) => (
                 <tr key={sale.castName} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="px-6 py-4 font-bold text-wine-red text-lg">{index + 1}</td>
-                  <td className="px-6 py-4 font-semibold text-gray-800">{sale.castName}</td>
-                  <td className="px-6 py-4 text-gray-700">{sale.shifts}日</td>
-                  <td className="px-6 py-4 font-bold text-wine-red">¥{sale.revenue.toLocaleString('ja-JP')}</td>
+                  <td className="px-2 md:px-6 py-2 md:py-4 font-bold text-wine-red text-sm md:text-lg">{index + 1}</td>
+                  <td className="px-2 md:px-6 py-2 md:py-4 font-semibold text-gray-800 text-xs md:text-sm">{sale.castName}</td>
+                  <td className="px-2 md:px-6 py-2 md:py-4 text-gray-700 text-xs md:text-sm">{sale.shifts}日</td>
+                  <td className="px-2 md:px-6 py-2 md:py-4 font-bold text-wine-red text-xs md:text-sm">¥{sale.revenue.toLocaleString('ja-JP')}</td>
                 </tr>
               ))}
             </tbody>

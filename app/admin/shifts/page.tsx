@@ -141,7 +141,7 @@ export default function ShiftsPage() {
           {/* カレンダーグリッド */}
           <div className="bg-white rounded border border-gray-200 overflow-hidden">
             {/* 曜日ヘッダー */}
-            <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
+            <div className="grid grid-cols-7 gap-0 border-b border-gray-200 min-w-max md:min-w-fit">
               {['日', '月', '火', '水', '木', '金', '土'].map((day) => (
                 <div key={day} className="p-3 text-center font-bold bg-wine-red text-white text-sm">
                   {day}
@@ -150,11 +150,11 @@ export default function ShiftsPage() {
             </div>
 
             {/* 日付セル */}
-            <div className="grid grid-cols-7 gap-0">
+            <div className="grid grid-cols-7 gap-0 overflow-x-auto">
               {Array.from({
                 length: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
               }).map((_, i) => (
-                <div key={`empty-${i}`} className="p-4 bg-gray-100 border-r border-b border-gray-200 h-24"></div>
+                <div key={`empty-${i}`} className="p-4 bg-gray-100 border-r border-b border-gray-200 h-20 md:h-24"></div>
               ))}
 
               {Array.from({
@@ -167,7 +167,7 @@ export default function ShiftsPage() {
                 return (
                   <div
                     key={dateStr}
-                    className="p-3 border-r border-b border-gray-200 h-24 bg-white hover:bg-gray-50 transition flex flex-col"
+                    className="p-2 md:p-3 border-r border-b border-gray-200 h-20 md:h-24 bg-white hover:bg-gray-50 transition flex flex-col"
                   >
                     <div className="font-bold text-wine-red mb-2">{i + 1}</div>
                     {workerCount > 0 && (

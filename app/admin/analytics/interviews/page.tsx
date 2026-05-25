@@ -161,14 +161,14 @@ export default function AnalyticsInterviewsPage() {
 
         {/* テーブル */}
         <div className="card-wine-border overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-max">
             <thead>
               <tr className="border-b border-wine-red">
-                <th className="p-4 font-bold text-wine-red">氏名</th>
-                <th className="p-4 font-bold text-wine-red">メール</th>
-                <th className="p-4 font-bold text-wine-red">面接日</th>
-                <th className="p-4 font-bold text-wine-red">ステータス</th>
-                <th className="p-4 font-bold text-wine-red text-right">アクション</th>
+                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">氏名</th>
+                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">メール</th>
+                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">面接日</th>
+                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red">ステータス</th>
+                <th className="p-2 md:p-4 text-xs md:text-sm font-bold text-wine-red text-right">アクション</th>
               </tr>
             </thead>
             <tbody>
@@ -184,17 +184,17 @@ export default function AnalyticsInterviewsPage() {
                     key={interview.id}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="p-4 font-semibold text-gray-800">
+                    <td className="p-2 md:p-4 text-xs md:text-sm font-semibold text-gray-800">
                       {interview.genshi_name || '-'}
                     </td>
-                    <td className="p-4 text-gray-600">{interview.email}</td>
-                    <td className="p-4 text-gray-600">
+                    <td className="p-2 md:p-4 text-xs md:text-sm text-gray-600">{interview.email}</td>
+                    <td className="p-2 md:p-4 text-xs md:text-sm text-gray-600">
                       {formatDate(interview.created_at)}
                     </td>
-                    <td className="p-4">
+                    <td className="p-2 md:p-4 text-xs md:text-sm">
                       <StatusBadge status={interview.status} />
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-2 md:p-4 text-xs md:text-sm text-right">
                       <Link
                         href={`/admin/interviews/${interview.id}`}
                         className="text-wine-red font-semibold hover:underline"

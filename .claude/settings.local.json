@@ -45,7 +45,10 @@
       "Bash(curl -s \"http://localhost:3000/admin/settings/features\")",
       "Bash(npx tsc *)",
       "PowerShell(Get-Command *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "mcp__ide__getDiagnostics",
+      "Bash(git rev-list *)",
+      "Bash(git commit *)"
     ]
   }
 }

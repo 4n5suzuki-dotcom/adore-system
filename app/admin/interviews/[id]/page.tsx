@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import {
   getInterviewById,
   getInterviewPhotos,
@@ -115,6 +116,54 @@ export default function InterviewDetailPage() {
     } else {
       setError('保存に失敗しました')
     }
+    setIsSaving(false)
+  }
+
+  // 採用 → ステータスを hired に更新し、面接データからキャストを自動作成
+  const handleApprove = async () => {
+    if (!interview) return
+
+    setIsSaving(true)
+
+    try {
+      // 1. ステータスを 'hired' に更新
+      const { error: updateError } = await supabase
+        .from('interviews')
+        .update({ status: 'hired' })
+        .eq('id', interview.id)
+
+      if (updateError) {
+        alert('ステータス更新に失敗しました')
+        setIsSaving(false)
+        return
+      }
+
+      // 2. キャストを自動作成
+      const { data, error: castError } = await supabase
+        .from('casts')
+        .insert({
+          tenant_id: '80f87308-b305-4d0c-8fb2-a7317e435a17',
+          interview_id: interview.id,
+          genshi_name: interview.genshi_name || '',
+          furigana: interview.furigana || '',
+          age: interview.age || null,
+          contact_info: interview.phone || '',
+          joined_date: new Date().toISOString().split('T')[0],
+          status: 'active',
+          memo: `採用面接日：${interview.created_at ? new Date(interview.created_at).toLocaleDateString('ja-JP') : ''}`,
+        })
+        .select()
+
+      if (!castError && data && data[0]) {
+        alert('採用決定してキャスト情報を作成しました')
+        setInterview({ ...interview, status: 'hired' })
+      } else {
+        alert('キャスト作成に失敗しました：' + castError?.message)
+      }
+    } catch (err) {
+      alert('エラーが発生しました')
+    }
+
     setIsSaving(false)
   }
 
@@ -327,11 +376,11 @@ export default function InterviewDetailPage() {
               ✏️ 編集
             </button>
             <button
-              onClick={() => handleStatusChange('hired')}
-              disabled={isSaving}
+              onClick={handleApprove}
+              disabled={isSaving || interview.status === 'hired'}
               className="bg-green text-white font-bold py-2 px-4 rounded hover:bg-green/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              ✅ 採用
+              {isSaving ? '処理中...' : '✅ 採用'}
             </button>
             <button
               onClick={() => handleStatusChange('rejected')}
@@ -341,6 +390,7 @@ export default function InterviewDetailPage() {
               ❌ 不採用
             </button>
           </div>
+
         </section>
       </main>
 

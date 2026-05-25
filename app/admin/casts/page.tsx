@@ -20,6 +20,10 @@ export default function CastsPage() {
 
       const { data, error } = await query.order('joined_date', { ascending: false })
 
+      // 診断用ログ（ブラウザの開発者ツール > Console で確認）
+      console.log('[casts] filter =', filter, '| rows =', data?.length ?? 0, '| data =', data)
+      if (error) console.error('[casts] fetch error:', error)
+
       if (!error && data) {
         setCasts(data as Cast[])
       }

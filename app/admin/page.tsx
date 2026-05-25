@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
 import {
   getInterviewsForMonth,
   getLatestInterviews,
@@ -12,6 +13,14 @@ import {
   type InterviewStatusCount,
 } from '@/lib/supabase/interviews'
 import type { Interview } from '@/lib/supabase/types'
+
+// 今月のKPIサマリー
+interface DashboardStats {
+  hirings: number
+  activeCasts: number
+  totalShiftsThisMonth: number
+  totalRevenue: number
+}
 
 // ステータス → 表示ラベル + バッジ色（Tailwind が検出できるよう完全なクラス名で定義）
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
@@ -69,6 +78,12 @@ export default function AdminPage() {
     hired: 0,
     rejected: 0,
   })
+  const [stats, setStats] = useState<DashboardStats>({
+    hirings: 0,
+    activeCasts: 0,
+    totalShiftsThisMonth: 0,
+    totalRevenue: 0,
+  })
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
@@ -95,6 +110,35 @@ export default function AdminPage() {
         setAdoptionRate(rate)
         setLatestInterviews(latest)
         setStatusCounts(counts)
+
+        // 今月のKPI集計（採用数・アクティブキャスト・当月出勤数・概算売上）
+        const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
+        const monthEnd = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`
+
+        const { count: hiringsCount } = await supabase
+          .from('casts')
+          .select('id', { count: 'exact' })
+          .gte('joined_date', monthStart)
+          .lte('joined_date', monthEnd)
+
+        const { count: activeCastsCount } = await supabase
+          .from('casts')
+          .select('id', { count: 'exact' })
+          .eq('status', 'active')
+
+        const { data: shiftsData } = await supabase
+          .from('shift_schedules')
+          .select('id')
+          .gte('shift_date', monthStart)
+          .lte('shift_date', monthEnd)
+
+        const totalShifts = shiftsData?.length || 0
+        setStats({
+          hirings: hiringsCount || 0,
+          activeCasts: activeCastsCount || 0,
+          totalShiftsThisMonth: totalShifts,
+          totalRevenue: totalShifts * 20000,
+        })
       } catch (err) {
         // データ取得エラー：ログ出力のうえデフォルト値（0 / []）を維持
         console.error('admin dashboard load failed:', err)
@@ -117,6 +161,90 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-10">
+        {/* 今月のKPI */}
+        <section>
+          <h2 className="heading-2 mb-4">📊 今月のKPI</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 本月採用数 */}
+            <div className="bg-gradient-to-br from-wine-red to-red-900 rounded-lg shadow-lg p-8 text-white">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm opacity-90 mb-2">本月採用数</p>
+                  <p className="text-4xl font-bold">{stats.hirings}</p>
+                  <p className="text-xs opacity-75 mt-2">名</p>
+                </div>
+                <div className="text-5xl opacity-20">👥</div>
+              </div>
+            </div>
+
+            {/* アクティブキャスト数 */}
+            <div className="bg-gradient-to-br from-gold to-yellow-600 rounded-lg shadow-lg p-8 text-wine-red">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm opacity-90 mb-2">アクティブキャスト数</p>
+                  <p className="text-4xl font-bold">{stats.activeCasts}</p>
+                  <p className="text-xs opacity-75 mt-2">名</p>
+                </div>
+                <div className="text-5xl opacity-20">✨</div>
+              </div>
+            </div>
+
+            {/* 本月出勤日数 */}
+            <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg shadow-lg p-8 text-white">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm opacity-90 mb-2">本月出勤日数</p>
+                  <p className="text-4xl font-bold">{stats.totalShiftsThisMonth}</p>
+                  <p className="text-xs opacity-75 mt-2">日</p>
+                </div>
+                <div className="text-5xl opacity-20">📅</div>
+              </div>
+            </div>
+
+            {/* 本月売上（仮） */}
+            <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-lg shadow-lg p-8 text-white">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm opacity-90 mb-2">本月売上（概算）</p>
+                  <p className="text-3xl font-bold">¥{(stats.totalRevenue / 1000000).toFixed(1)}M</p>
+                  <p className="text-xs opacity-75 mt-2">※出勤数 × ¥20,000</p>
+                </div>
+                <div className="text-5xl opacity-20">💰</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* クイックメニュー */}
+        <section>
+          <h2 className="text-2xl font-bold text-wine-red mb-6">クイックメニュー</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link
+              href="/admin/analytics/interviews"
+              className="p-6 bg-gray-50 rounded-lg border-2 border-wine-red hover:bg-wine-red hover:text-white transition"
+            >
+              <p className="font-bold text-lg">📋 面接管理</p>
+              <p className="text-sm opacity-75 mt-2">応募者の面接を管理</p>
+            </Link>
+
+            <Link
+              href="/admin/casts"
+              className="p-6 bg-gray-50 rounded-lg border-2 border-wine-red hover:bg-wine-red hover:text-white transition"
+            >
+              <p className="font-bold text-lg">👥 キャスト管理</p>
+              <p className="text-sm opacity-75 mt-2">キャスト情報を管理</p>
+            </Link>
+
+            <Link
+              href="/admin/shifts"
+              className="p-6 bg-gray-50 rounded-lg border-2 border-wine-red hover:bg-wine-red hover:text-white transition"
+            >
+              <p className="font-bold text-lg">📅 稼働カレンダー</p>
+              <p className="text-sm opacity-75 mt-2">シフトを管理・確認</p>
+            </Link>
+          </div>
+        </section>
+
         {/* サマリーカード 4 個 */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <SummaryCard

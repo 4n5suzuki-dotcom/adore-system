@@ -44,7 +44,7 @@ export default function Sidebar() {
   ]
 
   return (
-    <aside className="w-64 bg-wine-red text-white min-h-screen p-6 shadow-lg">
+    <aside className="hidden md:block w-64 bg-wine-red text-white min-h-screen p-6 shadow-lg">
       {/* ロゴ */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Adore System</h1>

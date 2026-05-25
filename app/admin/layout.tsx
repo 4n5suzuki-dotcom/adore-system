@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/auth'
 import Sidebar from '@/components/admin/Sidebar'
 import Header from '@/components/admin/Header'
+import BottomTabBar from '@/components/admin/BottomTabBar'
 
 export default function AdminLayout({
   children,
@@ -45,10 +46,13 @@ export default function AdminLayout({
         <Header />
 
         {/* ページ内容 */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 pb-20 md:pb-8">
           {children}
         </main>
       </div>
+
+      {/* モバイル用ボトムタブバー */}
+      <BottomTabBar />
     </div>
   )
 }

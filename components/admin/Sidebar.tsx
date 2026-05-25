@@ -21,6 +21,11 @@ export default function Sidebar() {
       icon: '📊'
     },
     {
+      label: '稼働カレンダー',
+      href: '/admin/shifts',
+      icon: '📅'
+    },
+    {
       label: '面接管理',
       children: [
         { label: '最新面接', href: '/admin' },

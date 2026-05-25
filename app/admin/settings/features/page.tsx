@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   getAllFeatureFlags,
@@ -19,9 +19,6 @@ export default function FeatureSettingsPage() {
   const [activePhase, setActivePhase] = useState<number>(1)
   const [saveStatus, setSaveStatus] = useState<Record<string, SaveStatus>>({})
 
-  // ロールアウト率スライダーのデバウンス用タイマー
-  const rolloutTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
-
   const load = async () => {
     setError(null)
     const data = await getAllFeatureFlags()
@@ -31,10 +28,6 @@ export default function FeatureSettingsPage() {
 
   useEffect(() => {
     load()
-    const timers = rolloutTimers.current
-    return () => {
-      Object.values(timers).forEach((t) => clearTimeout(t))
-    }
   }, [])
 
   // ローカル状態のみ更新（保存はしない）
@@ -73,15 +66,6 @@ export default function FeatureSettingsPage() {
     const next = !flag.enabled
     setFlagLocal(key, { enabled: next })
     persist(key, { enabled: next })
-  }
-
-  // ロールアウト率：ドラッグ中はローカル更新、停止後（400ms）に保存
-  const updateRollout = (key: string, percentage: number) => {
-    setFlagLocal(key, { rollout_percentage: percentage })
-    clearTimeout(rolloutTimers.current[key])
-    rolloutTimers.current[key] = setTimeout(() => {
-      persist(key, { rollout_percentage: percentage })
-    }, 400)
   }
 
   const visibleFlags = flags.filter((f) => f.phase === activePhase)
@@ -172,31 +156,6 @@ export default function FeatureSettingsPage() {
                         }`}
                       />
                     </button>
-                  </div>
-
-                  {/* ロールアウト率スライダー */}
-                  <div className="mt-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-gray-800 text-sm font-semibold">
-                        ロールアウト率
-                      </span>
-                      <span className="text-wine-red text-sm font-bold">
-                        {flag.rollout_percentage}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={flag.rollout_percentage}
-                      onChange={(e) =>
-                        updateRollout(flag.key, Number(e.target.value))
-                      }
-                      className="w-full accent-wine-red"
-                    />
-                    <p className="text-muted text-xs mt-1">
-                      {flag.rollout_percentage}% のユーザーに公開
-                    </p>
                   </div>
 
                   {/* 保存ステータス */}

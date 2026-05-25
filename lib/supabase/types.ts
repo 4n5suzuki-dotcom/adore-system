@@ -211,7 +211,6 @@ export interface FeatureFlag {
   name: string
   description: string | null
   enabled: boolean
-  rollout_percentage: number
   phase: number
   created_at: string
   updated_at: string

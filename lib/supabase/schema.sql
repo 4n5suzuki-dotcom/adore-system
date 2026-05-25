@@ -258,49 +258,41 @@ CREATE INDEX idx_customers_tenant_id ON customers(tenant_id);
 CREATE INDEX idx_cast_performance_cast_id ON cast_performance(cast_id);
 CREATE INDEX idx_cast_performance_month ON cast_performance(month);
 
--- フィーチャーフラグ管理テーブル（各機能の ON/OFF・ロールアウト率を制御）
+-- フィーチャーフラグ管理テーブル（各機能の ON/OFF・フェーズを制御。rollout_percentage は廃止）
+DROP TABLE IF EXISTS feature_flags CASCADE;
+
 CREATE TABLE IF NOT EXISTS feature_flags (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  key TEXT NOT NULL UNIQUE,
-  name TEXT NOT NULL,
+  key VARCHAR(100) NOT NULL UNIQUE,
+  name VARCHAR(255) NOT NULL,
   description TEXT,
   enabled BOOLEAN DEFAULT false,
-  rollout_percentage INT CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100) DEFAULT 0,
-  phase INT DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  phase INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- PostgreSQL ではインライン COMMENT が使えないため、列コメントは別文で付与
 COMMENT ON COLUMN feature_flags.phase IS '1=フェーズ1, 2=フェーズ2, 3=フェーズ3';
 
--- 初期フラグ（フェーズ1 は全部 true、フェーズ2 は false）
-INSERT INTO feature_flags (key, name, description, enabled, rollout_percentage, phase)
-VALUES
-  ('dashboard_adoption', '採用ダッシュボード', 'ダッシュボード表示', true, 100, 1),
-  ('interview_reminders', '面接前リマインダー', 'リマインダー機能', true, 100, 1),
-  ('document_management', '書類管理', '面接書類管理', false, 0, 1),
-  ('cast_mypage', 'キャストマイページ', 'キャスト向けマイページ', false, 0, 1),
-  ('memo_system', 'メモ・申し送り', 'メモ編集機能', true, 100, 1),
-  ('candidate_photo_upload', '写真アップロード', '写真保存機能', false, 0, 1),
-  ('status_notifications', 'ステータス通知', 'ステータス変更通知', true, 100, 1),
-  ('followup_alerts', '体入後フォロー', '体入後アラート', false, 0, 1),
-  ('cast_performance_tracking', '在籍キャスト稼働状況', 'キャスト稼働管理', false, 0, 1),
-  ('sales_prediction', 'キャスト売上予測', 'AI 売上予測', false, 0, 2),
-  ('customer_management', '顧客管理', '会員管理機能', false, 0, 2),
-  ('salary_calculation', '給与計算エンジン', '給与自動計算', false, 0, 2),
-  ('sales_management', '売上管理', '売上分析・管理', false, 0, 2),
-  ('ai_support', 'AI 経営サポート', 'Claude API 統合', false, 0, 2)
-ON CONFLICT (key) DO NOTHING;
+-- インデックス
+CREATE INDEX IF NOT EXISTS idx_feature_flags_key ON feature_flags(key);
 
--- 追加機能フラグ（既存スキーマ構成に合わせて登録。実装済みは true・100%）
--- ※ salary_calculation / ai_support は上で登録済み（未実装=false）のため重複追加しない
-INSERT INTO feature_flags (key, name, description, enabled, rollout_percentage, phase)
-VALUES
-  ('interview_management', '面接管理', '面接管理機能', true, 100, 1),
-  ('cast_management', 'キャスト管理', 'キャスト管理機能', true, 100, 2),
-  ('shift_calendar', '稼働カレンダー', '稼働カレンダー機能', true, 100, 2),
-  ('shift_self_report', 'シフト自己申告', 'シフト自己申告システム', true, 100, 2),
-  ('dashboard_kpi', 'ダッシュボードKPI', 'ダッシュボード（KPIカード）', true, 100, 2),
-  ('sales_analytics', '売上分析', '売上分析ダッシュボード', true, 100, 2)
+-- RLS 無効化（開発中）
+ALTER TABLE feature_flags DISABLE ROW LEVEL SECURITY;
+
+-- 初期データ挿入（ON/OFF のみ。実装済み=true / 未実装=false）
+INSERT INTO feature_flags (key, name, description, enabled, phase) VALUES
+  ('interview_management', '面接管理', '面接管理機能', true, 1),
+  ('interview_reminders', '面接リマインダ', 'リマインダー機能', true, 1),
+  ('memo_system', 'メモ・申し送り', 'メモ編集機能', true, 1),
+  ('status_notifications', 'ステータス通知', 'ステータス変更通知', true, 1),
+  ('ai_support', 'AI経営サポート', 'Claude API統合', false, 2),
+  ('customer_management', '顧客管理', '会員管理機能', true, 2),
+  ('dashboard_kpi', 'ダッシュボードKPI', 'ダッシュボード（KPI）', true, 2),
+  ('salary_calculation', '給与計算エンジン', '給与自動計算', false, 2),
+  ('sales_analytics', '売上分析', '売上分析ダッシュボード', true, 2),
+  ('sales_management', '売上管理', '売上分析・管理', false, 2),
+  ('shift_calendar', '稼働カレンダー', '稼働カレンダー機能', true, 2),
+  ('shift_self_report', 'シフト自己申告', 'シフト自己申告システム', true, 2)
 ON CONFLICT (key) DO NOTHING;

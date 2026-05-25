@@ -18,18 +18,20 @@ export async function getAllFeatureFlags(): Promise<FeatureFlag[]> {
   return (data as FeatureFlag[]) || []
 }
 
-/** 特定のフラグが有効か確認 */
-export async function isFeatureEnabled(key: string): Promise<boolean> {
-  const flags = await getAllFeatureFlags()
-  const flag = flags.find((f) => f.key === key)
-  if (!flag) return false
+/** 特定のフラグが有効か確認（feature_flags を直接1件取得） */
+export async function isFeatureEnabled(flagKey: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('feature_flags')
+    .select('enabled')
+    .eq('key', flagKey)
+    .single()
 
-  // enabled = false なら即座に false
-  if (!flag.enabled) return false
+  if (error || !data) {
+    console.warn(`Feature flag "${flagKey}" not found`)
+    return false
+  }
 
-  // ロールアウト率で制御（0-100%）
-  const random = Math.random() * 100
-  return random <= flag.rollout_percentage
+  return data.enabled
 }
 
 /** フラグを更新 */

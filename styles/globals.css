@@ -1,3 +1,7 @@
+/* 見出し用セリフ（latin: Cormorant / 和文: Shippori Mincho B1）。
+   ※ @import は他のルールより前に置く必要があるため最上部に配置。
+   本番では next/font での読み込みを推奨（FOUT/パフォーマンス対策）。 */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Shippori+Mincho+B1:wght@500;600;700&display=swap');
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
@@ -16,12 +20,16 @@
     @apply bg-gold text-gray-800 font-bold py-2 px-4 rounded hover:bg-gold/90 transition;
   }
 
+  /* カード：重い shadow-lg をやめ、淡い影＋細い罫線で上品に */
   .card {
-    @apply bg-white p-8 rounded-lg shadow-lg;
+    @apply bg-white p-8 rounded-lg;
+    box-shadow: 0 2px 14px rgba(26, 22, 20, 0.06);
+    border: 1px solid #EDE7DC; /* cream 寄りのヘアライン */
   }
 
   .card-wine-border {
-    @apply bg-white p-8 rounded-lg shadow-lg border-l-4 border-wine-red;
+    @apply bg-white p-8 rounded-lg border-l-4 border-wine-red;
+    box-shadow: 0 2px 14px rgba(26, 22, 20, 0.06);
   }
 
   .form-input {
@@ -32,12 +40,19 @@
     @apply block text-gray-800 font-semibold mb-2;
   }
 
+  /* 見出し：セリフ＋ややワイドな字間で高級感を付与 */
   .heading-1 {
-    @apply text-4xl font-bold text-wine-red;
+    @apply text-4xl text-wine-red;
+    font-family: 'Cormorant Garamond', 'Shippori Mincho B1', serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
   }
 
   .heading-2 {
-    @apply text-3xl font-bold text-wine-red;
+    @apply text-3xl text-wine-red;
+    font-family: 'Cormorant Garamond', 'Shippori Mincho B1', serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
   }
 
   .text-muted {
@@ -46,5 +61,17 @@
 
   .text-error {
     @apply text-red;
+  }
+
+  /* ゴールドのヘアライン（区切り線）— 太い border の代わりに */
+  .divider-gold {
+    height: 1px;
+    border: 0;
+    background-color: rgba(168, 137, 76, 0.5); /* brass 50% */
+  }
+
+  /* 調光された暗い面（サイドバー/ヘッダー向け）。金文字を載せる前提 */
+  .surface-dark {
+    @apply bg-charcoal text-cream;
   }
 }

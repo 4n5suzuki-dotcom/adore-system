@@ -98,7 +98,7 @@ export default function AnalyticsAdoptionRatePage() {
               <Line
                 type="monotone"
                 dataKey="adoption_rate"
-                stroke="#8B3A3A"
+                stroke="#6B1F2A"
                 name="採用率"
                 strokeWidth={2}
               />

@@ -139,7 +139,7 @@ export default function SalesPage() {
                 <YAxis />
                 <Tooltip formatter={(value) => `¥${Number(value).toLocaleString('ja-JP')}`} />
                 <Legend />
-                <Bar dataKey="revenue" fill="#8B3A3A" name="売上（円）" />
+                <Bar dataKey="revenue" fill="#6B1F2A" name="売上（円）" />
               </BarChart>
             </ResponsiveContainer>
           </div>

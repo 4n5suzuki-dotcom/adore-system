@@ -13,6 +13,8 @@ import {
   type InterviewStatusCount,
 } from '@/lib/supabase/interviews'
 import type { Interview } from '@/lib/supabase/types'
+import StatLine from '@/components/admin/StatLine'
+import '@/styles/adore-v3.css'
 
 // 今月のKPIサマリー
 interface DashboardStats {
@@ -22,15 +24,15 @@ interface DashboardStats {
   totalRevenue: number
 }
 
-// ステータス → 表示ラベル + バッジ色（Tailwind が検出できるよう完全なクラス名で定義）
-const STATUS_STYLES: Record<string, { label: string; className: string }> = {
-  incomplete: { label: '未確認', className: 'bg-orange text-white' },
-  pending: { label: '待機中', className: 'bg-gray-400 text-white' },
-  confirmed: { label: '確認済み', className: 'bg-blue text-white' },
-  hired: { label: '採用済み', className: 'bg-green text-white' },
-  rejected: { label: '不採用', className: 'bg-red text-white' },
-  processing: { label: '進行中', className: 'bg-gray-400 text-white' },
-  on_trial: { label: '体験中', className: 'bg-gold text-gray-800' },
+// ステータス → 表示ラベル + トーン（エディトリアルのドット表示）
+const STATUS_META: Record<string, { label: string; tone: string }> = {
+  incomplete: { label: '未確認', tone: 'pending' },
+  pending: { label: '待機中', tone: 'waiting' },
+  confirmed: { label: '確認済み', tone: 'neutral' },
+  processing: { label: '進行中', tone: 'waiting' },
+  hired: { label: '採用済み', tone: 'positive' },
+  rejected: { label: '不採用', tone: 'negative' },
+  on_trial: { label: '体験中', tone: 'pending' },
 }
 
 // ステータス別集計カードの並び順とラベル
@@ -42,25 +44,18 @@ const STATUS_SUMMARY: { key: keyof InterviewStatusCount; label: string }[] = [
   { key: 'rejected', label: '不採用' },
 ]
 
-// ISO 文字列 → "YYYY-MM-DD HH:MM"（ローカル時刻）
+// ISO 文字列 → "YYYY/MM/DD HH:MM"（ローカル時刻）
 function formatDateTime(iso: string | null): string {
   if (!iso) return '-'
   const d = new Date(iso)
   if (isNaN(d.getTime())) return '-'
   const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const style = STATUS_STYLES[status] ?? {
-    label: status,
-    className: 'bg-gray-200 text-gray-800',
-  }
-  return (
-    <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${style.className}`}>
-      {style.label}
-    </span>
-  )
+function StatusDot({ status }: { status: string }) {
+  const meta = STATUS_META[status] ?? { label: status, tone: 'neutral' }
+  return <StatLine tone={meta.tone} label={meta.label} />
 }
 
 export default function AdminPage() {
@@ -152,244 +147,211 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <p className="text-muted text-lg">読み込み中...</p>
+      <div className="adore-v3 -mt-6 -mx-4 -mb-20 md:-mt-8 md:-mx-8 md:-mb-8 min-h-screen flex items-center justify-center">
+        <p className="pmeta">読み込み中…</p>
       </div>
     )
   }
 
+  const now = new Date()
+  const monthLabel = now
+    .toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    .toUpperCase()
+  const revManYen = Math.round(stats.totalRevenue / 10000)
+
+  // KPI（編集インデックス行）
+  const kpis = [
+    { label: '本月採用数', value: String(stats.hirings), unit: '名', sub: '今月入店ベース' },
+    { label: '稼働キャスト', value: String(stats.activeCasts), unit: '名', sub: '在籍ステータス' },
+    { label: '本月出勤日数', value: String(stats.totalShiftsThisMonth), unit: '日', sub: '全キャスト合計' },
+    { label: '本月売上', value: revManYen.toLocaleString('ja-JP'), unit: '万', sub: '※出勤数 × ¥20,000' },
+  ]
+
+  // サマリー（実データのリンク指標）
+  const summaries = [
+    { label: '今日の面接', value: `${todayCount}`, unit: '件', href: '/admin/analytics/today' },
+    { label: '今月面接', value: `${monthlyCount}`, unit: '件', href: '/admin/analytics/interviews' },
+    { label: '今月採用', value: `${monthlyAdoptedCount}`, unit: '件', href: '/admin/analytics/hired' },
+    { label: '採用率', value: adoptionRate.toFixed(1), unit: '%', href: '/admin/analytics/adoption-rate' },
+  ]
+
+  const quickMenu = [
+    { no: '01', t: '面接管理', d: '応募者の面接を管理', href: '/admin/analytics/interviews' },
+    { no: '02', t: 'キャスト管理', d: '在籍情報を管理', href: '/admin/casts' },
+    { no: '03', t: '稼働カレンダー', d: 'シフトを管理・確認', href: '/admin/shifts' },
+  ]
+
   return (
-    <div className="min-h-screen bg-white">
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-10">
-        {/* 今月のKPI */}
-        <section>
-          <h2 className="heading-2 mb-4">📊 今月のKPI</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 本月採用数 */}
-            <div className="bg-gradient-to-br from-wine-red to-red-900 rounded-lg shadow-lg p-8 text-white">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm opacity-90 mb-2">本月採用数</p>
-                  <p className="text-4xl font-bold">{stats.hirings}</p>
-                  <p className="text-xs opacity-75 mt-2">名</p>
-                </div>
-                <div className="text-5xl opacity-20">👥</div>
-              </div>
-            </div>
+    <div className="adore-v3 -mt-6 -mx-4 -mb-20 md:-mt-8 md:-mx-8 md:-mb-8 min-h-screen">
+      <div className="mx-auto max-w-6xl px-5 pt-8 pb-24 md:px-10 md:pt-10 md:pb-16">
+        {/* 見出し */}
+        <div className="page-head">
+          <span className="crumb">DASHBOARD — {monthLabel}</span>
+          <h1 className="ptitle">今月の概況</h1>
+          <p className="pmeta">恵比寿ラウンジ 運営サマリー</p>
+        </div>
 
-            {/* アクティブキャスト数 */}
-            <div className="bg-gradient-to-br from-gold to-yellow-600 rounded-lg shadow-lg p-8 text-wine-red">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm opacity-90 mb-2">アクティブキャスト数</p>
-                  <p className="text-4xl font-bold">{stats.activeCasts}</p>
-                  <p className="text-xs opacity-75 mt-2">名</p>
-                </div>
-                <div className="text-5xl opacity-20">✨</div>
+        {/* KPI インデックス行 */}
+        <div className="idx" style={{ marginBottom: 44 }}>
+          {kpis.map((c) => (
+            <div className="cell" key={c.label}>
+              <div className="il">{c.label}</div>
+              <div className="iv num">
+                {c.value}
+                <span className="u">{c.unit}</span>
               </div>
+              <div className="is">{c.sub}</div>
             </div>
+          ))}
+        </div>
 
-            {/* 本月出勤日数 */}
-            <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg shadow-lg p-8 text-white">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm opacity-90 mb-2">本月出勤日数</p>
-                  <p className="text-4xl font-bold">{stats.totalShiftsThisMonth}</p>
-                  <p className="text-xs opacity-75 mt-2">日</p>
+        {/* 01 サマリー */}
+        <section className="sec">
+          <div className="sh">
+            <span className="no num">01</span>
+            <h2>サマリー</h2>
+            <span className="right eyebrow">THIS MONTH</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {summaries.map((s) => (
+              <Link key={s.label} href={s.href} className="quick">
+                <div className="num" style={{ fontSize: 34, color: 'var(--charcoal)', lineHeight: 1 }}>
+                  {s.value}
+                  <span style={{ fontFamily: 'var(--serif-jp)', fontSize: 13, color: 'var(--ink-50)', marginLeft: 4 }}>
+                    {s.unit}
+                  </span>
                 </div>
-                <div className="text-5xl opacity-20">📅</div>
-              </div>
-            </div>
-
-            {/* 本月売上（仮） */}
-            <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-lg shadow-lg p-8 text-white">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm opacity-90 mb-2">本月売上（概算）</p>
-                  <p className="text-3xl font-bold">¥{(stats.totalRevenue / 1000000).toFixed(1)}M</p>
-                  <p className="text-xs opacity-75 mt-2">※出勤数 × ¥20,000</p>
-                </div>
-                <div className="text-5xl opacity-20">💰</div>
-              </div>
-            </div>
+                <div className="qd">{s.label} →</div>
+              </Link>
+            ))}
           </div>
         </section>
 
-        {/* クイックメニュー */}
-        <section>
-          <h2 className="text-2xl font-bold text-wine-red mb-6">クイックメニュー</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link
-              href="/admin/analytics/interviews"
-              className="p-6 bg-gray-50 rounded-lg border-2 border-wine-red hover:bg-wine-red hover:text-white transition"
-            >
-              <p className="font-bold text-lg">📋 面接管理</p>
-              <p className="text-sm opacity-75 mt-2">応募者の面接を管理</p>
-            </Link>
-
-            <Link
-              href="/admin/casts"
-              className="p-6 bg-gray-50 rounded-lg border-2 border-wine-red hover:bg-wine-red hover:text-white transition"
-            >
-              <p className="font-bold text-lg">👥 キャスト管理</p>
-              <p className="text-sm opacity-75 mt-2">キャスト情報を管理</p>
-            </Link>
-
-            <Link
-              href="/admin/shifts"
-              className="p-6 bg-gray-50 rounded-lg border-2 border-wine-red hover:bg-wine-red hover:text-white transition"
-            >
-              <p className="font-bold text-lg">📅 稼働カレンダー</p>
-              <p className="text-sm opacity-75 mt-2">シフトを管理・確認</p>
-            </Link>
+        {/* 02 クイックメニュー */}
+        <section className="sec">
+          <div className="sh">
+            <span className="no num">02</span>
+            <h2>クイックメニュー</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+            {quickMenu.map((q) => (
+              <Link key={q.no} href={q.href} className="quick">
+                <div className="qn num">{q.no}</div>
+                <div className="qt">{q.t}</div>
+                <div className="qd">{q.d} →</div>
+              </Link>
+            ))}
           </div>
         </section>
 
-        {/* サマリーカード 4 個 */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <SummaryCard
-            icon="📋"
-            label="今日の面接数"
-            value={`${todayCount}件`}
-            href="/admin/analytics/today"
-          />
-          <SummaryCard
-            icon="📊"
-            label="今月面接数"
-            value={`${monthlyCount}件`}
-            href="/admin/analytics/interviews"
-          />
-          <SummaryCard
-            icon="✅"
-            label="今月採用数"
-            value={`${monthlyAdoptedCount}件`}
-            href="/admin/analytics/hired"
-          />
-          <SummaryCard
-            icon="📈"
-            label="採用率"
-            value={`${adoptionRate.toFixed(1)}%`}
-            href="/admin/analytics/adoption-rate"
-          />
-        </section>
+        {/* 03 最新の面接 */}
+        <section className="sec">
+          <div className="sh">
+            <span className="no num">03</span>
+            <h2>最新の面接</h2>
+            <Link href="/admin/analytics/interviews" className="right link-detail">
+              面接一覧 →
+            </Link>
+          </div>
 
-        {/* 最新面接一覧 */}
-        <section>
-          <h2 className="heading-2 mb-4">最新面接（5件）</h2>
-          <div className="card overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-gray-200 text-gray-600 text-sm">
-                  <th className="py-3 px-2 font-semibold">氏名</th>
-                  <th className="py-3 px-2 font-semibold">面接日時</th>
-                  <th className="py-3 px-2 font-semibold">ステータス</th>
-                  <th className="py-3 px-2 font-semibold text-right">アクション</th>
-                </tr>
-              </thead>
-              <tbody>
-                {latestInterviews.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-8 text-center text-muted">
-                      面接データがありません
-                    </td>
-                  </tr>
-                ) : (
-                  latestInterviews.map((interview) => (
-                    <tr
-                      key={interview.id}
-                      className="border-b border-gray-200 last:border-0"
-                    >
-                      <td className="py-3 px-2 text-gray-800 font-semibold">
-                        {interview.genshi_name || '-'}
-                      </td>
-                      <td className="py-3 px-2 text-gray-600">
-                        {formatDateTime(interview.created_at)}
-                      </td>
-                      <td className="py-3 px-2">
-                        <StatusBadge status={interview.status} />
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        <button
-                          onClick={() =>
-                            router.push(`/admin/interviews/${interview.id}`)
-                          }
-                          className="text-wine-red font-semibold hover:underline"
-                        >
-                          詳細
-                        </button>
-                      </td>
+          {latestInterviews.length === 0 ? (
+            <div className="empty">面接データがありません</div>
+          ) : (
+            <>
+              {/* PC：テーブル */}
+              <div className="hidden md:block">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>氏名</th>
+                      <th>面接日時</th>
+                      <th className="ta-r">ステータス</th>
+                      <th className="ta-r"></th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {latestInterviews.map((interview) => (
+                      <tr key={interview.id}>
+                        <td className="nm">{interview.genshi_name || '-'}</td>
+                        <td className="dt">{formatDateTime(interview.created_at)}</td>
+                        <td className="ta-r">
+                          <StatusDot status={interview.status} />
+                        </td>
+                        <td className="ta-r">
+                          <button
+                            onClick={() => router.push(`/admin/interviews/${interview.id}`)}
+                            className="link-detail"
+                          >
+                            詳細
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* モバイル：カード */}
+              <div className="md:hidden mcards">
+                {latestInterviews.map((interview) => (
+                  <Link
+                    key={interview.id}
+                    href={`/admin/interviews/${interview.id}`}
+                    className="mcard"
+                  >
+                    <div className="mc-l">
+                      <div className="nm">{interview.genshi_name || '-'}</div>
+                      <div className="sub">{formatDateTime(interview.created_at)}</div>
+                    </div>
+                    <div className="mc-r">
+                      <StatusDot status={interview.status} />
+                      <span className="link-detail">詳細 →</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
-        {/* ステータス別集計 */}
-        <section>
-          <h2 className="heading-2 mb-4">ステータス別集計</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* 04 ステータス別集計 */}
+        <section className="sec">
+          <div className="sh">
+            <span className="no num">04</span>
+            <h2>ステータス別集計</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {STATUS_SUMMARY.map(({ key, label }) => (
               <div
                 key={key}
-                className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center"
+                style={{
+                  padding: '18px 20px',
+                  border: '1px solid var(--hair)',
+                  borderRadius: 6,
+                  background: 'var(--paper)',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
               >
-                <p className="text-muted text-sm mb-1">{label}</p>
-                <p className="text-3xl font-bold text-gray-800">
+                <div style={{ fontFamily: 'var(--serif-jp)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--ink-50)' }}>
+                  {label}
+                </div>
+                <div className="num" style={{ fontSize: 38, color: 'var(--charcoal)', lineHeight: 1, marginTop: 10 }}>
                   {statusCounts[key]}
-                </p>
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* キャスト管理セクション */}
-        <div className="mt-12 pt-12 border-t border-gray-200">
-          <h2 className="heading-2 text-2xl font-bold text-wine-red mb-6">キャスト管理</h2>
-
-          <Link href="/admin/casts">
-            <div className="card-wine-border p-6 cursor-pointer hover:shadow-xl transition hover:-translate-y-0.5">
-              <p className="text-gray-600">在籍キャスト</p>
-              <div className="text-4xl font-bold text-wine-red mt-2">管理</div>
-              <p className="text-gray-600 mt-2 text-sm">一覧を見る →</p>
-            </div>
-          </Link>
+        {/* フッター */}
+        <div
+          className="flex items-center justify-between"
+          style={{ marginTop: 12, color: 'var(--ink-38)', fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase' }}
+        >
+          <span className="num">Adore System v3</span>
+          <span className="num">Ebisu · Tokyo</span>
         </div>
-      </main>
+      </div>
     </div>
   )
-}
-
-function SummaryCard({
-  icon,
-  label,
-  value,
-  href,
-}: {
-  icon: string
-  label: string
-  value: string
-  href?: string
-}) {
-  const content = (
-    <>
-      <div className="text-3xl mb-2">{icon}</div>
-      <p className="heading-1">{value}</p>
-      <p className="text-muted mt-1">{label}</p>
-    </>
-  )
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        className="card-wine-border block cursor-pointer transition hover:shadow-xl hover:-translate-y-0.5"
-      >
-        {content}
-      </Link>
-    )
-  }
-
-  return <div className="card-wine-border">{content}</div>
 }

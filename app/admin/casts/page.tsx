@@ -4,6 +4,30 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { Cast } from '@/lib/supabase/types'
+import StatLine from '@/components/admin/StatLine'
+import '@/styles/adore-v3.css'
+
+// ステータス → ラベル + トーン
+const STATUS_META: Record<string, { label: string; tone: string }> = {
+  active: { label: '在籍中', tone: 'positive' },
+  trial: { label: '体験中', tone: 'pending' },
+  retired: { label: '退店済み', tone: 'neutral' },
+}
+
+const FILTERS: { key: 'all' | 'active' | 'trial' | 'retired'; label: string }[] = [
+  { key: 'all', label: 'すべて' },
+  { key: 'active', label: '在籍中' },
+  { key: 'trial', label: '体験中' },
+  { key: 'retired', label: '退店済み' },
+]
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return '—'
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())}`
+}
 
 export default function CastsPage() {
   const [casts, setCasts] = useState<Cast[]>([])
@@ -33,116 +57,96 @@ export default function CastsPage() {
     fetchCasts()
   }, [filter])
 
-  if (loading) return <div className="p-8">読み込み中...</div>
-
-  const statusLabel = {
-    active: '在籍中',
-    trial: '体験中',
-    retired: '退店済み'
+  if (loading) {
+    return (
+      <div className="adore-v3 -mt-6 -mx-4 -mb-20 md:-mt-8 md:-mx-8 md:-mb-8 min-h-screen flex items-center justify-center">
+        <p className="pmeta">読み込み中…</p>
+      </div>
+    )
   }
 
-  const statusColor = {
-    active: 'bg-green text-white',
-    trial: 'bg-blue text-white',
-    retired: 'bg-gray-400 text-white'
-  }
+  const meta = (s: string) => STATUS_META[s] ?? { label: s, tone: 'neutral' }
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* ヘッダー */}
-        <div className="mb-8">
-          <Link href="/admin" className="text-wine-red hover:underline mb-2 inline-block">
-            ← ダッシュボードへ戻る
+    <div className="adore-v3 -mt-6 -mx-4 -mb-20 md:-mt-8 md:-mx-8 md:-mb-8 min-h-screen">
+      <div className="mx-auto max-w-6xl px-5 pt-8 pb-24 md:px-10 md:pt-10 md:pb-16">
+        {/* 見出し */}
+        <div className="page-head">
+          <Link href="/admin" className="crumb">
+            ← DASHBOARD
           </Link>
-          <h1 className="text-3xl font-bold text-wine-red mt-2">キャスト一覧</h1>
-          <p className="text-gray-600 mt-2">{casts.length} 名</p>
+          <h1 className="ptitle">在籍キャスト</h1>
+          <p className="pmeta">{casts.length} 名</p>
         </div>
 
-        {/* フィルタボタン */}
-        <div className="flex gap-4 mb-8">
-          {(['all', 'active', 'trial', 'retired'] as const).map((status) => (
+        {/* フィルタ */}
+        <div className="pills" style={{ marginBottom: 26 }}>
+          {FILTERS.map((f) => (
             <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded font-bold transition ${
-                filter === status
-                  ? 'bg-wine-red text-white'
-                  : 'bg-gray-200 text-gray-800 hover:bg-gray-400'
-              }`}
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={'pill' + (filter === f.key ? ' on' : '')}
             >
-              {status === 'all'
-                ? 'すべて'
-                : statusLabel[status as 'active' | 'trial' | 'retired']}
+              {f.label}
             </button>
           ))}
         </div>
 
-        {/* 一覧（モバイル：カード / PC：テーブル） */}
+        {/* 一覧 */}
         {casts.length === 0 ? (
-          <div className="card-wine-border text-center py-8 text-gray-600">
-            キャストが見つかりません
-          </div>
+          <div className="empty">キャストが見つかりません</div>
         ) : (
           <>
-            {/* モバイル：カード表示 */}
-            <div className="block md:hidden space-y-3">
-              {casts.map((cast) => (
-                <Link
-                  key={cast.id}
-                  href={`/admin/casts/${cast.id}`}
-                  className="card-wine-border block p-4 hover:bg-gray-50 transition"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-base font-bold">{cast.genshi_name}</span>
-                    <span className={`px-3 py-1 rounded text-xs font-bold whitespace-nowrap ${statusColor[cast.status as keyof typeof statusColor]}`}>
-                      {statusLabel[cast.status as keyof typeof statusLabel]}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">
-                    入店日：{cast.joined_date ? new Date(cast.joined_date).toLocaleDateString('ja-JP') : '—'}
-                  </p>
-                </Link>
-              ))}
-            </div>
-
-            {/* PC：テーブル表示 */}
+            {/* PC：テーブル */}
             <div className="hidden md:block">
-              <div className="card-wine-border overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-wine-red">
-                      <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">氏名</th>
-                      <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">入店日</th>
-                      <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">ステータス</th>
-                      <th className="text-left p-2 md:p-4 text-sm md:text-base font-bold text-wine-red whitespace-nowrap">アクション</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {casts.map((cast) => (
-                      <tr key={cast.id} className="border-b hover:bg-gray-50">
-                        <td className="p-2 md:p-4 text-sm md:text-base font-semibold whitespace-nowrap">{cast.genshi_name}</td>
-                        <td className="p-2 md:p-4 text-sm md:text-base">
-                          {cast.joined_date ? new Date(cast.joined_date).toLocaleDateString('ja-JP') : '—'}
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>源氏名</th>
+                    <th>入店日</th>
+                    <th className="ta-r">ステータス</th>
+                    <th className="ta-r"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {casts.map((cast) => {
+                    const m = meta(cast.status)
+                    return (
+                      <tr key={cast.id}>
+                        <td className="nm">{cast.genshi_name}</td>
+                        <td className="dt">{formatDate(cast.joined_date)}</td>
+                        <td className="ta-r">
+                          <StatLine tone={m.tone} label={m.label} />
                         </td>
-                        <td className="p-2 md:p-4 text-sm md:text-base">
-                          <span className={`px-3 py-1 rounded text-sm font-bold ${statusColor[cast.status as keyof typeof statusColor]}`}>
-                            {statusLabel[cast.status as keyof typeof statusLabel]}
-                          </span>
-                        </td>
-                        <td className="p-2 md:p-4 text-sm md:text-base">
-                          <Link
-                            href={`/admin/casts/${cast.id}`}
-                            className="text-wine-red hover:underline"
-                          >
+                        <td className="ta-r">
+                          <Link href={`/admin/casts/${cast.id}`} className="link-detail">
                             詳細
                           </Link>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* モバイル：カード */}
+            <div className="md:hidden mcards">
+              {casts.map((cast) => {
+                const m = meta(cast.status)
+                return (
+                  <Link key={cast.id} href={`/admin/casts/${cast.id}`} className="mcard">
+                    <div className="mc-l">
+                      <div className="nm">{cast.genshi_name}</div>
+                      <div className="sub">入店 {formatDate(cast.joined_date)}</div>
+                    </div>
+                    <div className="mc-r">
+                      <StatLine tone={m.tone} label={m.label} />
+                      <span className="link-detail">詳細 →</span>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           </>
         )}

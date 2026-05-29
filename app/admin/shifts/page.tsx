@@ -318,7 +318,63 @@ export default function ShiftsPage() {
             <h2>月別カレンダー</h2>
             <span className="right eyebrow">日別出勤数</span>
           </div>
-          <MonthCalendar year={year} month0={month0} counts={counts} todayDay={todayDay} onPick={openDay} />
+          {/* PC：7列グリッド */}
+          <div className="hidden md:block">
+            <MonthCalendar year={year} month0={month0} counts={counts} todayDay={todayDay} onPick={openDay} />
+          </div>
+          {/* モバイル：日別リスト */}
+          <div className="md:hidden mcards">
+            {counts.map((c, i) => {
+              const day = i + 1
+              const wd = new Date(year, month0, day).getDay()
+              return (
+                <button
+                  key={day}
+                  onClick={() => openDay(day)}
+                  className="mcard"
+                  style={{ width: '100%', border: 0, background: 'none', cursor: 'pointer' }}
+                >
+                  <div className="mc-l">
+                    <div
+                      className="nm"
+                      style={{ color: wd === 0 ? 'var(--no)' : wd === 6 ? 'var(--neu)' : 'var(--ink)' }}
+                    >
+                      {day}日（{WD[wd]}）
+                      {day === todayDay && (
+                        <span className="num" style={{ marginLeft: 8, fontSize: 10, color: 'var(--brass-deep)', letterSpacing: '0.12em' }}>
+                          TODAY
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mc-r" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    {c > 0 ? (
+                      <span
+                        style={{
+                          fontFamily: 'var(--serif-jp)',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: 'var(--charcoal)',
+                          background: 'rgba(168,137,76,0.14)',
+                          border: '1px solid var(--hair)',
+                          borderRadius: 999,
+                          padding: '3px 10px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {c}名
+                      </span>
+                    ) : (
+                      <span className="dt" style={{ color: 'var(--ink-38)' }}>
+                        休
+                      </span>
+                    )}
+                    <span className="link-detail">詳細 →</span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         </section>
 
         {/* 03 稼働ヒートマップ + サマリー */}

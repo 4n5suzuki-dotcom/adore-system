@@ -3,96 +3,59 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-type SubMenuItem = { label: string; href: string }
-type MenuItem = {
-  label: string
-  href?: string
-  icon?: string
-  children?: SubMenuItem[]
+function NavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={`px-4 py-2 rounded transition block ${
+        active
+          ? 'bg-brass bg-opacity-20 text-cream font-bold'
+          : 'text-cream hover:bg-brass hover:bg-opacity-20'
+      }`}
+    >
+      {label}
+    </Link>
+  )
 }
 
 export default function Sidebar() {
   const pathname = usePathname()
 
-  const menuItems: MenuItem[] = [
-    {
-      label: '管理画面',
-      href: '/admin',
-      icon: '📊'
-    },
-    {
-      label: '稼働カレンダー',
-      href: '/admin/shifts',
-      icon: '📅'
-    },
-    {
-      label: '面接管理',
-      children: [
-        { label: '最新面接', href: '/admin' },
-        { label: '今月の面接', href: '/admin/analytics/interviews' },
-        { label: '採用者', href: '/admin/analytics/hired' },
-        { label: '採用率分析', href: '/admin/analytics/adoption-rate' },
-        { label: '💰 売上分析', href: '/admin/analytics/sales' }
-      ]
-    },
-    {
-      label: 'キャスト管理',
-      children: [
-        { label: 'キャスト一覧', href: '/admin/casts' }
-      ]
-    }
-  ]
-
   return (
-    <aside className="hidden md:block w-64 bg-charcoal text-cream min-h-screen p-6 border-r-4 border-brass">
+    <aside className="hidden md:block md:fixed md:left-0 md:top-0 md:h-screen md:w-64 md:overflow-y-auto bg-charcoal text-cream p-6 border-r-4 border-brass">
       {/* ロゴ */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Adore System</h1>
-        <p className="text-sm text-gray-200 mt-1">管理画面</p>
       </div>
 
       {/* メニュー */}
-      <nav className="space-y-2">
-        {menuItems.map((item) => (
-          <div key={item.label}>
-            {/* 親メニュー */}
-            {!item.children ? (
-              <Link
-                href={item.href ?? '#'}
-                className={`block px-4 py-3 rounded transition ${
-                  pathname === item.href
-                    ? 'bg-gold text-wine-red font-bold'
-                    : 'hover:bg-gold/80 hover:text-wine-red'
-                }`}
-              >
-                <span className="mr-2">{item.icon}</span>
-                {item.label}
-              </Link>
-            ) : (
-              <div>
-                <p className="px-4 py-2 text-sm font-bold text-gold mt-4 mb-2">
-                  {item.label}
-                </p>
-                {/* サブメニュー */}
-                <div className="space-y-1 pl-2">
-                  {item.children.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      className={`block px-4 py-2 text-sm rounded transition ${
-                        pathname === child.href
-                          ? 'bg-gold text-wine-red font-bold'
-                          : 'hover:bg-gold/80 hover:text-wine-red'
-                      }`}
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+      <nav>
+        {/* ━━━━━━━━━━━━━━━━━━━ */}
+        {/* Adore Suite セクション */}
+        {/* ━━━━━━━━━━━━━━━━━━━ */}
+        <div className="mb-6 border-b border-brass border-opacity-30 pb-4">
+          <div className="px-4 mb-3">
+            <p className="text-xs text-brass font-bold uppercase tracking-widest">💎 Adore Suite</p>
+            <p className="text-xs text-cream text-opacity-70 mt-1">営業・売上・顧客管理</p>
           </div>
-        ))}
+          <NavLink href="/admin/lounge-suite" label="📊 ダッシュボード" active={pathname === '/admin/lounge-suite'} />
+          {/* Cast / Reservations は Suite 内タブで管理 */}
+        </div>
+
+        {/* ━━━━━━━━━━━━━━━━━━━ */}
+        {/* Adore System セクション */}
+        {/* ━━━━━━━━━━━━━━━━━━━ */}
+        <div className="mb-6 pb-4">
+          <div className="px-4 mb-3">
+            <p className="text-xs text-brass font-bold uppercase tracking-widest">📋 Adore System</p>
+            <p className="text-xs text-cream text-opacity-70 mt-1">採用・シフト・給与管理</p>
+          </div>
+          <NavLink href="/admin" label="📊 ダッシュボード" active={pathname === '/admin'} />
+          <NavLink href="/admin/interviews" label="📋 面接管理" active={pathname === '/admin/interviews'} />
+          <NavLink href="/admin/casts" label="👥 キャスト管理" active={pathname === '/admin/casts'} />
+          <NavLink href="/admin/shifts" label="📅 稼働カレンダー" active={pathname === '/admin/shifts'} />
+          <NavLink href="/admin/analytics/sales" label="📈 分析" active={pathname === '/admin/analytics/sales'} />
+        </div>
       </nav>
     </aside>
   )

@@ -51,7 +51,7 @@ export default function Sidebar() {
             <p className="text-xs text-cream text-opacity-70 mt-1">採用・シフト・給与管理</p>
           </div>
           <NavLink href="/admin" label="📊 ダッシュボード" active={pathname === '/admin'} />
-          <NavLink href="/admin/interviews" label="📋 面接管理" active={pathname === '/admin/interviews'} />
+          <NavLink href="/admin/analytics/interviews" label="📋 面接管理" active={pathname === '/admin/analytics/interviews'} />
           <NavLink href="/admin/casts" label="👥 キャスト管理" active={pathname === '/admin/casts'} />
           <NavLink href="/admin/shifts" label="📅 稼働カレンダー" active={pathname === '/admin/shifts'} />
           <NavLink href="/admin/analytics/sales" label="📈 分析" active={pathname === '/admin/analytics/sales'} />

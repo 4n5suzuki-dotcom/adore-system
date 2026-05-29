@@ -30,6 +30,16 @@ function CastDetailContent() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('')
   const [shifts, setShifts] = useState<Record<string, ShiftSchedule>>({})
 
+  // シフト申告URL生成結果（ポップアップではなくページ内に表示）
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
+  const [urlExpiry, setUrlExpiry] = useState<string | null>(null)
+
+  // シフト変更依頼モーダル用 state（selectedDate を流用し、表示は専用フラグで制御）
+  const [showChangeModal, setShowChangeModal] = useState(false)
+  const [newStartTime, setNewStartTime] = useState('')
+  const [newEndTime, setNewEndTime] = useState('')
+  const [changeReason, setChangeReason] = useState('')
+
   useEffect(() => {
     const fetchData = async () => {
       // キャスト基本情報
@@ -148,6 +158,53 @@ function CastDetailContent() {
     }
   }
 
+  // シフト変更依頼を送信（shift_change_requests に登録）
+  const handleRequestShiftChange = async () => {
+    if (!cast?.id || !selectedDate) return
+    if (!newStartTime || !newEndTime) {
+      alert('変更後の開始時間・終了時間を入力してください')
+      return
+    }
+
+    const current = shifts[selectedDate]
+
+    try {
+      const { error } = await supabase
+        .from('shift_change_requests')
+        .insert({
+          cast_id: cast.id,
+          shift_date: selectedDate,
+          old_start_time: current?.start_time ?? null,
+          old_end_time: current?.end_time ?? null,
+          new_start_time: newStartTime,
+          new_end_time: newEndTime,
+          request_reason: changeReason || null,
+        })
+
+      if (error) {
+        // 握り潰さず実エラーを表示（shift_change_requests 未作成・RLS などの特定用）
+        console.error('[handleRequestShiftChange] insert failed:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        })
+        alert('変更依頼の送信に失敗しました：' + error.message)
+        return
+      }
+
+      alert('シフト変更依頼を送信しました')
+      setShowChangeModal(false)
+      setSelectedDate(null)
+      setNewStartTime('')
+      setNewEndTime('')
+      setChangeReason('')
+    } catch (err) {
+      console.error('[handleRequestShiftChange] unexpected error:', err)
+      alert('エラーが発生しました')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
@@ -235,12 +292,17 @@ function CastDetailContent() {
                 onClick={async () => {
                   if (!cast?.id) return
 
-                  const token = await generateShiftAccessToken(cast.id, 7)
-                  if (token) {
-                    const url = `${window.location.origin}/public/shifts?token=${token.token}`
-                    alert(`シフト申告URL:\n\n${url}\n\n(有効期限: ${new Date(token.expires_at).toLocaleDateString('ja-JP')})`)
-                    // 将来：クリップボードコピー機能やメール送信機能を追加
-                  } else {
+                  try {
+                    const token = await generateShiftAccessToken(cast.id, 7)
+                    if (token) {
+                      const url = `${window.location.origin}/public/shifts?token=${token.token}`
+                      setGeneratedUrl(url)
+                      setUrlExpiry(new Date(token.expires_at).toLocaleDateString('ja-JP'))
+                    } else {
+                      alert('URLの生成に失敗しました')
+                    }
+                  } catch (error) {
+                    console.error('Failed to generate URL:', error)
                     alert('URLの生成に失敗しました')
                   }
                 }}
@@ -248,6 +310,29 @@ function CastDetailContent() {
               >
                 🔗 シフト申告URLを生成
               </button>
+
+              {generatedUrl && (
+                <div className="mt-6 p-4 bg-gold rounded border-l-4 border-wine-red">
+                  <p className="text-sm text-gray-600 mb-2">生成されたシフト申告URL:</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={generatedUrl}
+                      readOnly
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm bg-white"
+                    />
+                    <button
+                      onClick={() => navigator.clipboard.writeText(generatedUrl)}
+                      className="px-4 py-2 bg-wine-red text-white rounded text-sm hover:opacity-90 whitespace-nowrap"
+                    >
+                      コピー
+                    </button>
+                  </div>
+                  {urlExpiry && (
+                    <p className="text-xs text-gray-500 mt-2">有効期限: {urlExpiry}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -432,6 +517,97 @@ function CastDetailContent() {
                       className="flex-1 px-4 py-2 bg-wine-red text-white rounded hover:opacity-90"
                     >
                       保存
+                    </button>
+                  </div>
+
+                  {/* シフト変更依頼へ切り替え（日付・現在シフトを引き継ぐ） */}
+                  <button
+                    onClick={() => {
+                      const current = shifts[selectedDate]
+                      setNewStartTime(current?.start_time ?? '')
+                      setNewEndTime(current?.end_time ?? '')
+                      setChangeReason('')
+                      setShowTimeModal(false)
+                      setShowChangeModal(true)
+                    }}
+                    className="w-full mt-3 px-4 py-2 border border-wine-red text-wine-red rounded text-sm hover:bg-gold transition"
+                  >
+                    シフト変更依頼
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* シフト変更依頼モーダル */}
+            {showChangeModal && selectedDate && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                  <h3 className="text-lg font-bold text-wine-red mb-4">
+                    {new Date(`${selectedDate}T00:00:00`).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })} のシフト変更依頼
+                  </h3>
+
+                  {/* 現在のシフト表示 */}
+                  <div className="mb-4 p-3 bg-gray-50 rounded">
+                    <p className="text-sm text-gray-600 mb-2">現在のシフト</p>
+                    <p className="font-semibold">
+                      {shifts[selectedDate]
+                        ? `${shifts[selectedDate].start_time} - ${shifts[selectedDate].end_time}`
+                        : 'シフト未設定'}
+                    </p>
+                  </div>
+
+                  {/* 新しい時間入力 */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold mb-2">開始時間（変更後）</label>
+                    <input
+                      type="time"
+                      value={newStartTime}
+                      onChange={(e) => setNewStartTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold mb-2">終了時間（変更後）</label>
+                    <input
+                      type="time"
+                      value={newEndTime}
+                      onChange={(e) => setNewEndTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                    />
+                  </div>
+
+                  {/* 理由入力 */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold mb-2">変更理由（オプション）</label>
+                    <textarea
+                      placeholder="変更したい理由を入力..."
+                      value={changeReason}
+                      onChange={(e) => setChangeReason(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+
+                  {/* ボタン */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowChangeModal(false)
+                        setSelectedDate(null)
+                        setNewStartTime('')
+                        setNewEndTime('')
+                        setChangeReason('')
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-400 text-white rounded hover:opacity-90"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={handleRequestShiftChange}
+                      className="flex-1 px-4 py-2 bg-wine-red text-white rounded hover:opacity-90"
+                    >
+                      変更依頼を送信
                     </button>
                   </div>
                 </div>

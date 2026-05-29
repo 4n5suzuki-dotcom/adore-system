@@ -246,6 +246,58 @@ CREATE INDEX IF NOT EXISTS idx_shift_access_tokens_cast_id ON shift_access_token
 -- RLS（開発中は無効。本番ではトークン検証API経由のアクセス制御を推奨）
 ALTER TABLE shift_access_tokens DISABLE ROW LEVEL SECURITY;
 
+-- シフト変更依頼（キャストからの稼働時間変更リクエストと承認管理）
+CREATE TABLE IF NOT EXISTS shift_change_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cast_id UUID NOT NULL REFERENCES casts(id) ON DELETE CASCADE,
+  shift_date DATE NOT NULL,
+  old_start_time TIME,
+  old_end_time TIME,
+  new_start_time TIME,
+  new_end_time TIME,
+  request_reason TEXT,
+  status VARCHAR(20) DEFAULT 'pending', -- pending / approved / rejected
+  requested_at TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- shift_change_requests のインデックス
+CREATE INDEX IF NOT EXISTS idx_shift_change_requests_cast_id ON shift_change_requests(cast_id);
+CREATE INDEX IF NOT EXISTS idx_shift_change_requests_status ON shift_change_requests(status);
+CREATE INDEX IF NOT EXISTS idx_shift_change_requests_shift_date ON shift_change_requests(shift_date);
+
+-- RLS（開発中は無効。本番では casts 同様 authenticated 向けポリシーを推奨）
+ALTER TABLE shift_change_requests DISABLE ROW LEVEL SECURITY;
+
+-- シフト申告（キャスト申告 → 管理側が確定版に調整するフロー）
+CREATE TABLE IF NOT EXISTS shift_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cast_id UUID NOT NULL REFERENCES casts(id) ON DELETE CASCADE,
+  shift_date DATE NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  status VARCHAR(20) DEFAULT 'submitted', -- submitted / confirmed
+  confirmed_start_time TIME,
+  confirmed_end_time TIME,
+  confirmed_at TIMESTAMPTZ,
+  confirmed_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  -- 同一キャストは同じ日に1件のみ（再申告は upsert で上書き）
+  UNIQUE(cast_id, shift_date)
+);
+
+-- shift_submissions のインデックス
+CREATE INDEX IF NOT EXISTS idx_shift_submissions_cast_id ON shift_submissions(cast_id);
+CREATE INDEX IF NOT EXISTS idx_shift_submissions_status ON shift_submissions(status);
+CREATE INDEX IF NOT EXISTS idx_shift_submissions_shift_date ON shift_submissions(shift_date);
+
+-- RLS（開発中は無効。本番では casts 同様 authenticated 向けポリシーを推奨）
+ALTER TABLE shift_submissions DISABLE ROW LEVEL SECURITY;
+
 -- インデックス作成
 CREATE INDEX idx_users_tenant_id ON users(tenant_id);
 CREATE INDEX idx_users_status ON users(status);

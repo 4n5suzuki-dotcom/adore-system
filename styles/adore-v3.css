@@ -475,3 +475,226 @@ a.crumb:hover {
   font-family: var(--serif-lt);
   letter-spacing: 0.08em;
 }
+
+.adore-v3 .ta-c {
+  text-align: center;
+}
+
+/* ---------- month calendar (出勤数カレンダー) ---------- */
+.adore-v3 .cal {
+  width: 100%;
+}
+.adore-v3 .cal-head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.adore-v3 .cal-wd {
+  font-family: var(--serif-jp);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-50);
+  text-align: center;
+  padding: 4px 0;
+}
+.adore-v3 .cal-wd.sun {
+  color: var(--no);
+}
+.adore-v3 .cal-wd.sat {
+  color: var(--neu);
+}
+.adore-v3 .cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.adore-v3 .cal-cell {
+  aspect-ratio: 1 / 0.82;
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 48px;
+  transition: 0.15s;
+  cursor: pointer;
+  text-align: left;
+  background: var(--paper);
+  width: 100%;
+}
+.adore-v3 .cal-cell.empty {
+  border-color: transparent;
+  background: transparent !important;
+  cursor: default;
+}
+.adore-v3 .cal-cell:not(.empty):hover {
+  border-color: var(--brass);
+}
+.adore-v3 .cal-cell.today {
+  outline: 2px solid var(--charcoal);
+  outline-offset: -1px;
+}
+.adore-v3 .cal-d {
+  font-family: var(--serif-lt);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-70);
+}
+.adore-v3 .cal-d.sun {
+  color: var(--no);
+}
+.adore-v3 .cal-d.sat {
+  color: var(--neu);
+}
+.adore-v3 .cal-c {
+  font-family: var(--serif-jp);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--charcoal);
+  align-self: flex-end;
+}
+.adore-v3 .cal-c i {
+  font-style: normal;
+  font-size: 9px;
+  color: var(--ink-50);
+  margin-left: 1px;
+}
+
+/* ---------- contribution-style heatmap ---------- */
+.adore-v3 .hm {
+  width: 100%;
+}
+.adore-v3 .hm-grid {
+  display: grid;
+  gap: 5px;
+}
+.adore-v3 .hm-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  min-height: 0;
+}
+.adore-v3 .hm-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 12px;
+  justify-content: flex-end;
+  font-family: var(--serif-jp);
+  font-size: 10.5px;
+  color: var(--ink-50);
+  letter-spacing: 0.1em;
+}
+.adore-v3 .hm-legend i {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  border: 1px solid var(--hair);
+  display: block;
+}
+
+/* ---------- share bar (構成比) ---------- */
+.adore-v3 .share {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.adore-v3 .share .sb {
+  flex: 1;
+  height: 5px;
+  background: var(--cream-2);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 60px;
+}
+.adore-v3 .share .sb i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--charcoal), var(--brass-deep));
+}
+.adore-v3 .share .sv {
+  font-family: var(--serif-lt);
+  font-size: 13px;
+  color: var(--ink-70);
+  width: 42px;
+  text-align: right;
+}
+
+/* ---------- summary rank rows ---------- */
+.adore-v3 .ranklist {
+  display: flex;
+  flex-direction: column;
+}
+.adore-v3 .rankrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+.adore-v3 .rankrow:last-child {
+  border-bottom: 0;
+}
+.adore-v3 .rankrow .rn {
+  font-family: var(--serif-jp);
+  font-size: 14px;
+  color: var(--ink-70);
+  letter-spacing: 0.04em;
+}
+
+/* ---------- month switcher ---------- */
+.adore-v3 .month-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.adore-v3 .month-nav .mlabel {
+  font-family: var(--serif-jp);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--charcoal);
+  min-width: 120px;
+  text-align: center;
+}
+.adore-v3 .nav-btn {
+  font-family: var(--serif-jp);
+  font-size: 13px;
+  color: var(--ink-70);
+  border: 1px solid var(--hair);
+  background: var(--paper);
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.18s;
+  white-space: nowrap;
+}
+.adore-v3 .nav-btn:hover {
+  border-color: var(--brass);
+  color: var(--ink);
+}
+
+/* ---------- modal (日別詳細) ---------- */
+.adore-v3-modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(21, 17, 15, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+  padding: 16px;
+}
+.adore-v3-modal {
+  background: var(--cream);
+  border: 1px solid var(--hair-strong);
+  border-radius: 8px;
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 440px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: var(--ink);
+}

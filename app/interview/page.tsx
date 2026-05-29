@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createInterview } from '@/lib/supabase/interviews'
 import type { Interview } from '@/lib/supabase/types'
+import '@/styles/adore-v3.css'
 
 // 送信先テナント（公開フォームのため env から。未設定時はプレースホルダー）
 const TENANT_ID =
@@ -91,10 +92,41 @@ interface ExtraData {
   self_pr: string
 }
 
+/* ---------- 細線アイコン（brass = currentColor） ---------- */
+function ArrowRight() {
+  return (
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  )
+}
+function ArrowLeft() {
+  return (
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5M11 18l-6-6 6-6" />
+    </svg>
+  )
+}
+function UploadIcon() {
+  return (
+    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 16V5M8 9l4-4 4 4" />
+      <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+    </svg>
+  )
+}
+function TrashIcon() {
+  return (
+    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+    </svg>
+  )
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="form-label">{label}</label>
+      <label className="af-label">{label}</label>
       {children}
     </div>
   )
@@ -202,11 +234,30 @@ export default function InterviewEntryPage() {
   // 送信完了画面
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-4">
-        <div className="card-wine-border max-w-md text-center">
-          <div className="text-5xl mb-4">🎉</div>
-          <h1 className="heading-2 mb-3">送信が完了しました</h1>
-          <p className="text-muted">
+      <div className="adore-v3 af-page flex min-h-screen items-center justify-center px-4">
+        <div className="af-card max-w-md p-8 text-center">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+            <span
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                border: '1px solid var(--hair)',
+                background: 'rgba(168,137,76,0.08)',
+                color: 'var(--brass)',
+                display: 'grid',
+                placeItems: 'center',
+              }}
+            >
+              <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12.5l4.5 4.5L19 7" />
+              </svg>
+            </span>
+          </div>
+          <h1 className="af-h2" style={{ marginBottom: 12 }}>
+            送信が完了しました
+          </h1>
+          <p className="af-muted" style={{ margin: 0 }}>
             ご応募ありがとうございます。担当者より追ってご連絡いたします。
           </p>
         </div>
@@ -215,46 +266,56 @@ export default function InterviewEntryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <main className="max-w-2xl mx-auto px-4 py-8">
+    <div className="adore-v3 af-page min-h-screen">
+      <main className="mx-auto max-w-2xl px-4 py-10 md:py-12">
         {/* ヘッダー */}
-        <header className="mb-6 text-center">
-          <h1 className="heading-1 mb-3">Adore 面接エントリー</h1>
-          <p className="text-muted text-sm">
+        <header className="mb-7 text-center">
+          <div className="af-eyebrow" style={{ marginBottom: 10 }}>
+            ENTRY
+          </div>
+          <h1 className="af-h1" style={{ fontSize: 30 }}>
+            <span className="en" style={{ fontStyle: 'italic', marginRight: '0.18em' }}>
+              Adore
+            </span>
+            <span className="jp">面接エントリー</span>
+          </h1>
+          <p className="af-muted" style={{ fontSize: 13.5, marginTop: 12 }}>
             Step {currentStep + 1}/{STEPS.length}：{STEPS[currentStep]}
           </p>
           {/* 進捗バー */}
-          <div className="mt-3 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+          <div className="af-track" style={{ marginTop: 14 }}>
             <div
-              className="h-full bg-wine-red transition-all"
+              className="af-fill"
               style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
             />
           </div>
         </header>
 
         {error && (
-          <div className="mb-4 p-3 bg-red text-white rounded">{error}</div>
+          <div className="af-alert" style={{ marginBottom: 16 }}>
+            {error}
+          </div>
         )}
 
         {/* ステップ本体 */}
-        <section className="card-wine-border">
+        <section className="af-card p-6 md:p-8">
           {/* Step 1: 基本情報 */}
           {currentStep === 0 && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <h2 className="heading-2 text-2xl">基本情報</h2>
-                <p className="text-muted text-sm mt-1">
+                <h2 className="af-h2">基本情報</h2>
+                <p className="af-muted" style={{ fontSize: 13.5, marginTop: 6 }}>
                   氏名、年齢、連絡先をお願いします
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <Field label="氏名（源氏名）">
                   <input
                     type="text"
                     required
                     value={formData.genshi_name || ''}
                     onChange={(e) => setField('genshi_name', e.target.value)}
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
                 <Field label="ふりがな">
@@ -263,14 +324,14 @@ export default function InterviewEntryPage() {
                     required
                     value={formData.furigana || ''}
                     onChange={(e) => setField('furigana', e.target.value)}
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
                 <Field label="性別">
                   <select
                     value={formData.gender || ''}
                     onChange={(e) => setField('gender', e.target.value)}
-                    className="form-input"
+                    className="af-select"
                   >
                     <option value="">未選択</option>
                     <option value="male">男性</option>
@@ -289,7 +350,7 @@ export default function InterviewEntryPage() {
                         e.target.value === '' ? null : Number(e.target.value)
                       )
                     }
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
                 <Field label="生年月日">
@@ -299,7 +360,7 @@ export default function InterviewEntryPage() {
                     onChange={(e) =>
                       setField('birthdate', e.target.value || null)
                     }
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
                 <Field label="メール">
@@ -308,7 +369,7 @@ export default function InterviewEntryPage() {
                     required
                     value={formData.email || ''}
                     onChange={(e) => setField('email', e.target.value)}
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
                 <Field label="電話">
@@ -317,7 +378,7 @@ export default function InterviewEntryPage() {
                     required
                     value={formData.phone || ''}
                     onChange={(e) => setField('phone', e.target.value)}
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
                 <Field label="LINE ID">
@@ -325,7 +386,7 @@ export default function InterviewEntryPage() {
                     type="text"
                     value={formData.line_id || ''}
                     onChange={(e) => setField('line_id', e.target.value)}
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
               </div>
@@ -334,14 +395,14 @@ export default function InterviewEntryPage() {
 
           {/* Step 2: 住所・本籍地 */}
           {currentStep === 1 && (
-            <div className="space-y-4">
-              <h2 className="heading-2 text-2xl">住所・本籍地</h2>
+            <div className="space-y-5">
+              <h2 className="af-h2">住所・本籍地</h2>
               <Field label="現住所">
                 <input
                   type="text"
                   value={formData.address || ''}
                   onChange={(e) => setField('address', e.target.value)}
-                  className="form-input"
+                  className="af-input"
                 />
               </Field>
               <Field label="詳細">
@@ -349,7 +410,7 @@ export default function InterviewEntryPage() {
                   type="text"
                   value={formData.address_detail || ''}
                   onChange={(e) => setField('address_detail', e.target.value)}
-                  className="form-input"
+                  className="af-input"
                 />
               </Field>
               <Field label="一人暮らし">
@@ -358,7 +419,7 @@ export default function InterviewEntryPage() {
                   onChange={(e) =>
                     setField('live_alone', e.target.value === 'yes')
                   }
-                  className="form-input"
+                  className="af-select"
                 >
                   <option value="no">いいえ</option>
                   <option value="yes">はい</option>
@@ -369,7 +430,7 @@ export default function InterviewEntryPage() {
                   value={formData.roommate_info || ''}
                   onChange={(e) => setField('roommate_info', e.target.value)}
                   rows={3}
-                  className="form-input"
+                  className="af-textarea"
                 />
               </Field>
             </div>
@@ -377,15 +438,15 @@ export default function InterviewEntryPage() {
 
           {/* Step 3: 出勤希望 */}
           {currentStep === 2 && (
-            <div className="space-y-4">
-              <h2 className="heading-2 text-2xl">出勤希望</h2>
+            <div className="space-y-5">
+              <h2 className="af-h2">出勤希望</h2>
               <Field label="希望曜日">
                 <input
                   type="text"
                   placeholder="例：月・水・金"
                   value={extra.pref_days}
                   onChange={(e) => setExtraField('pref_days', e.target.value)}
-                  className="form-input"
+                  className="af-input"
                 />
               </Field>
               <Field label="希望時間帯">
@@ -394,7 +455,7 @@ export default function InterviewEntryPage() {
                   placeholder="例：20:00-3:00"
                   value={extra.pref_hours}
                   onChange={(e) => setExtraField('pref_hours', e.target.value)}
-                  className="form-input"
+                  className="af-input"
                 />
               </Field>
               <Field label="最低出勤日数（日/月）">
@@ -404,7 +465,7 @@ export default function InterviewEntryPage() {
                   max={30}
                   value={extra.min_days}
                   onChange={(e) => setExtraField('min_days', e.target.value)}
-                  className="form-input"
+                  className="af-input"
                 />
               </Field>
             </div>
@@ -412,14 +473,14 @@ export default function InterviewEntryPage() {
 
           {/* Step 4: プロフィール・嗜好 */}
           {currentStep === 3 && (
-            <div className="space-y-4">
-              <h2 className="heading-2 text-2xl">プロフィール・嗜好</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-5">
+              <h2 className="af-h2">プロフィール・嗜好</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <Field label="お酒">
                   <select
                     value={extra.alcohol}
                     onChange={(e) => setExtraField('alcohol', e.target.value)}
-                    className="form-input"
+                    className="af-select"
                   >
                     <option value="">未選択</option>
                     <option value="1">弱い</option>
@@ -431,7 +492,7 @@ export default function InterviewEntryPage() {
                   <select
                     value={extra.karaoke}
                     onChange={(e) => setExtraField('karaoke', e.target.value)}
-                    className="form-input"
+                    className="af-select"
                   >
                     <option value="">未選択</option>
                     <option value="1">弱い</option>
@@ -443,7 +504,7 @@ export default function InterviewEntryPage() {
                   <select
                     value={extra.english}
                     onChange={(e) => setExtraField('english', e.target.value)}
-                    className="form-input"
+                    className="af-select"
                   >
                     <option value="">未選択</option>
                     <option value="0">不可</option>
@@ -455,7 +516,7 @@ export default function InterviewEntryPage() {
                   <select
                     value={extra.chinese}
                     onChange={(e) => setExtraField('chinese', e.target.value)}
-                    className="form-input"
+                    className="af-select"
                   >
                     <option value="">未選択</option>
                     <option value="0">不可</option>
@@ -468,7 +529,7 @@ export default function InterviewEntryPage() {
                     type="text"
                     value={extra.other_lang}
                     onChange={(e) => setExtraField('other_lang', e.target.value)}
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
                 <Field label="職業">
@@ -476,7 +537,7 @@ export default function InterviewEntryPage() {
                     type="text"
                     value={extra.occupation}
                     onChange={(e) => setExtraField('occupation', e.target.value)}
-                    className="form-input"
+                    className="af-input"
                   />
                 </Field>
               </div>
@@ -486,7 +547,7 @@ export default function InterviewEntryPage() {
                   rows={5}
                   value={extra.self_pr}
                   onChange={(e) => setExtraField('self_pr', e.target.value)}
-                  className="form-input"
+                  className="af-textarea"
                 />
               </Field>
             </div>
@@ -494,21 +555,24 @@ export default function InterviewEntryPage() {
 
           {/* Step 5: 写真アップロード */}
           {currentStep === 4 && (
-            <div className="space-y-4">
-              <h2 className="heading-2 text-2xl">写真アップロード</h2>
-              <p className="text-muted text-sm">最大6枚までアップロードできます。</p>
+            <div className="space-y-5">
+              <h2 className="af-h2">写真アップロード</h2>
+              <p className="af-muted" style={{ fontSize: 13.5 }}>
+                最大6枚までアップロードできます。
+              </p>
               <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault()
                   addPhotos(e.dataTransfer.files)
                 }}
-                className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center"
+                className="af-dropzone"
               >
-                <p className="text-muted mb-3">
+                <p className="af-muted" style={{ marginBottom: 14 }}>
                   ここにドラッグ&ドロップ、または
                 </p>
-                <label className="btn-secondary cursor-pointer inline-block">
+                <label className="af-btn af-btn-ghost cursor-pointer inline-flex">
+                  <UploadIcon />
                   ファイルを選択
                   <input
                     type="file"
@@ -528,15 +592,15 @@ export default function InterviewEntryPage() {
                       <img
                         src={photoUrls[i]}
                         alt={`photo-${i + 1}`}
-                        className="w-full h-32 object-cover rounded border border-gray-200"
+                        className="af-thumb"
                       />
                       <button
                         type="button"
                         onClick={() => removePhoto(i)}
-                        className="absolute top-1 right-1 bg-red text-white rounded-full w-6 h-6 text-sm leading-none"
+                        className="af-thumb-del"
                         aria-label="削除"
                       >
-                        ×
+                        <TrashIcon />
                       </button>
                     </div>
                   ))}
@@ -547,12 +611,10 @@ export default function InterviewEntryPage() {
 
           {/* Step 6: バック規定確認・同意 */}
           {currentStep === 5 && (
-            <div className="space-y-4">
-              <h2 className="heading-2 text-2xl">バック規定確認・同意</h2>
-              <div className="h-64 overflow-y-auto border border-gray-200 rounded p-4 bg-gray-50 whitespace-pre-wrap text-gray-800 text-sm">
-                {BACK_REGULATION_TEXT}
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className="space-y-5">
+              <h2 className="af-h2">バック規定確認・同意</h2>
+              <div className="af-reg">{BACK_REGULATION_TEXT}</div>
+              <label className="af-check-row">
                 <input
                   type="checkbox"
                   checked={agreeBackRegulation}
@@ -562,7 +624,12 @@ export default function InterviewEntryPage() {
                     setAgreedAt(checked ? new Date().toISOString() : null)
                   }}
                 />
-                <span className="text-gray-800 font-semibold">
+                <span className="af-check-box">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.5 4.5L19 7" />
+                  </svg>
+                </span>
+                <span className="af-check-label">
                   バック規定（{BACK_REGULATION_VERSION}）に同意する
                 </span>
               </label>
@@ -571,46 +638,46 @@ export default function InterviewEntryPage() {
 
           {/* Step 7: 振込先情報 */}
           {currentStep === 6 && (
-            <div className="mb-8">
-              <h2 className="heading-2 text-2xl mb-4">振込先情報</h2>
+            <div className="space-y-5">
+              <h2 className="af-h2">振込先情報</h2>
 
               {/* 銀行名 */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  銀行名 <span className="text-red">*</span>
+              <div>
+                <label className="af-label">
+                  銀行名 <span className="req">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.bank_name || ''}
                   onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
                   placeholder="例：○○銀行"
-                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                  className="af-input"
                 />
               </div>
 
               {/* 支店名 */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  支店名 <span className="text-red">*</span>
+              <div>
+                <label className="af-label">
+                  支店名 <span className="req">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.branch_name || ''}
                   onChange={(e) => setFormData({ ...formData, branch_name: e.target.value })}
                   placeholder="例：○○支店"
-                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                  className="af-input"
                 />
               </div>
 
               {/* 口座種別 */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  口座種別 <span className="text-red">*</span>
+              <div>
+                <label className="af-label">
+                  口座種別 <span className="req">*</span>
                 </label>
                 <select
                   value={formData.account_type || ''}
                   onChange={(e) => setFormData({ ...formData, account_type: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                  className="af-select"
                 >
                   <option value="">選択してください</option>
                   <option value="普通">普通</option>
@@ -619,30 +686,30 @@ export default function InterviewEntryPage() {
               </div>
 
               {/* 口座番号 */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  口座番号 <span className="text-red">*</span>
+              <div>
+                <label className="af-label">
+                  口座番号 <span className="req">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.account_number || ''}
                   onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
                   placeholder="例：1234567"
-                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                  className="af-input"
                 />
               </div>
 
               {/* 口座名義 */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  口座名義（カナ） <span className="text-red">*</span>
+              <div>
+                <label className="af-label">
+                  口座名義（カナ） <span className="req">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.account_name || ''}
                   onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
                   placeholder="例：ヤマダ タロウ"
-                  className="w-full px-4 py-2 border border-gray-200 rounded focus:outline-none focus:border-wine-red"
+                  className="af-input"
                 />
               </div>
             </div>
@@ -650,12 +717,12 @@ export default function InterviewEntryPage() {
 
           {/* Step 8: 確認・送信 */}
           {currentStep === 7 && (
-            <div className="space-y-4">
-              <h2 className="heading-2 text-2xl">確認・送信</h2>
-              <p className="text-muted text-sm">
+            <div className="space-y-5">
+              <h2 className="af-h2">確認・送信</h2>
+              <p className="af-muted" style={{ fontSize: 13.5 }}>
                 入力内容をご確認のうえ、送信してください。
               </p>
-              <dl className="divide-y divide-gray-200 text-sm">
+              <dl className="af-summary">
                 <SummaryRow label="氏名" value={formData.genshi_name} />
                 <SummaryRow label="ふりがな" value={formData.furigana} />
                 <SummaryRow label="メール" value={formData.email} />
@@ -686,16 +753,17 @@ export default function InterviewEntryPage() {
           <button
             onClick={goBack}
             disabled={currentStep === 0 || loading}
-            className="btn-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+            className="af-btn af-btn-ghost"
           >
-            ← 戻る
+            <ArrowLeft />
+            戻る
           </button>
 
           {isLastStep ? (
             <button
               onClick={handleSubmit}
               disabled={loading || !agreedAt}
-              className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
+              className="af-btn af-btn-primary"
             >
               {loading ? '送信中...' : '送信する'}
             </button>
@@ -703,9 +771,10 @@ export default function InterviewEntryPage() {
             <button
               onClick={goNext}
               disabled={currentStep === 5 && !agreeBackRegulation}
-              className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
+              className="af-btn af-btn-primary"
             >
-              次へ →
+              次へ
+              <ArrowRight />
             </button>
           )}
         </div>
@@ -722,9 +791,9 @@ function SummaryRow({
   value?: string | null
 }) {
   return (
-    <div className="flex py-2">
-      <dt className="text-muted w-32 shrink-0">{label}</dt>
-      <dd className="text-gray-800 break-words">{value || '未入力'}</dd>
+    <div className="af-sum-row">
+      <dt className="af-sum-label">{label}</dt>
+      <dd className="af-sum-value">{value || '未入力'}</dd>
     </div>
   )
 }

@@ -14,7 +14,38 @@ import {
 } from '@/lib/supabase/interviews'
 import type { Interview } from '@/lib/supabase/types'
 import StatLine from '@/components/admin/StatLine'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts'
 import '@/styles/adore-v3.css'
+
+// 推移グラフ用ダミーデータ（直近6ヶ月）
+// ※実データの月次履歴が未整備のため当面はダミー。取得元が決まり次第差し替え。
+const SALES_TREND = [
+  { month: '1月', sales: 2840 },
+  { month: '2月', sales: 3120 },
+  { month: '3月', sales: 2960 },
+  { month: '4月', sales: 3380 },
+  { month: '5月', sales: 3540 },
+  { month: '6月', sales: 3820 },
+]
+
+const RATE_TREND = [
+  { month: '1月', rate: 45 },
+  { month: '2月', rate: 52 },
+  { month: '3月', rate: 48 },
+  { month: '4月', rate: 55 },
+  { month: '5月', rate: 50 },
+  { month: '6月', rate: 58 },
+]
 
 // 今月のKPIサマリー
 interface DashboardStats {
@@ -205,10 +236,120 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* 01 サマリー */}
+        {/* 01 推移 */}
         <section className="sec">
           <div className="sh">
             <span className="no num">01</span>
+            <h2>推移</h2>
+            <span className="right eyebrow">PAST 6 MONTHS</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            {/* 売上推移（AreaChart） */}
+            <div>
+              <div className="flex items-baseline justify-between" style={{ marginBottom: 8 }}>
+                <span style={{ fontFamily: 'var(--serif-jp)', fontSize: 15, fontWeight: 600, letterSpacing: '0.08em' }}>
+                  売上（万円）
+                </span>
+                <span className="num" style={{ color: 'var(--brass-deep)', fontSize: 20 }}>
+                  {SALES_TREND[SALES_TREND.length - 1].sales.toLocaleString('ja-JP')}
+                </span>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={SALES_TREND} margin={{ top: 10, right: 12, left: -6, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--brass)" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="var(--brass)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="var(--hair)" strokeDasharray="2 4" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--hair)' }}
+                    tick={{ fontSize: 12, fill: 'var(--ink-50)', fontFamily: 'var(--serif-jp)' }}
+                    dy={4}
+                  />
+                  <YAxis
+                    width={46}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11, fill: 'var(--ink-38)' }}
+                    tickFormatter={(v: number) => v.toLocaleString('ja-JP')}
+                  />
+                  <Tooltip
+                    contentStyle={{ background: 'var(--charcoal)', border: '1px solid var(--hair)', borderRadius: 4, fontFamily: 'var(--serif-jp)' }}
+                    labelStyle={{ color: 'var(--brass-soft)', fontSize: 11, letterSpacing: '0.06em' }}
+                    itemStyle={{ color: 'var(--cream)' }}
+                    cursor={{ stroke: 'var(--brass)', strokeOpacity: 0.4, strokeDasharray: '2 4' }}
+                    formatter={(value) => [`${Number(value).toLocaleString('ja-JP')} 万円`, '売上']}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="sales"
+                    stroke="var(--charcoal)"
+                    strokeWidth={1.6}
+                    fill="url(#salesFill)"
+                    dot={{ r: 3, fill: 'var(--cream)', stroke: 'var(--brass-deep)', strokeWidth: 1.4 }}
+                    activeDot={{ r: 5, fill: 'var(--brass)', stroke: 'var(--cream)', strokeWidth: 1.5 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* 採用率トレンド（LineChart） */}
+            <div>
+              <div className="flex items-baseline justify-between" style={{ marginBottom: 8 }}>
+                <span style={{ fontFamily: 'var(--serif-jp)', fontSize: 15, fontWeight: 600, letterSpacing: '0.08em' }}>
+                  採用率（%）
+                </span>
+                <span className="num" style={{ color: 'var(--charcoal)', fontSize: 20 }}>
+                  {RATE_TREND[RATE_TREND.length - 1].rate}
+                </span>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={RATE_TREND} margin={{ top: 10, right: 12, left: -6, bottom: 0 }}>
+                  <CartesianGrid stroke="var(--hair)" strokeDasharray="2 4" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--hair)' }}
+                    tick={{ fontSize: 12, fill: 'var(--ink-50)', fontFamily: 'var(--serif-jp)' }}
+                    dy={4}
+                  />
+                  <YAxis
+                    width={46}
+                    domain={[0, 100]}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11, fill: 'var(--ink-38)' }}
+                    tickFormatter={(v: number) => `${v}`}
+                  />
+                  <Tooltip
+                    contentStyle={{ background: 'var(--charcoal)', border: '1px solid var(--hair)', borderRadius: 4, fontFamily: 'var(--serif-jp)' }}
+                    labelStyle={{ color: 'var(--brass-soft)', fontSize: 11, letterSpacing: '0.06em' }}
+                    itemStyle={{ color: 'var(--cream)' }}
+                    cursor={{ stroke: 'var(--brass)', strokeOpacity: 0.4, strokeDasharray: '2 4' }}
+                    formatter={(value) => [`${value}%`, '採用率']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="rate"
+                    stroke="var(--brass-deep)"
+                    strokeWidth={1.6}
+                    dot={{ r: 3.5, fill: 'var(--brass)', stroke: 'var(--brass-deep)', strokeWidth: 1.2 }}
+                    activeDot={{ r: 5, fill: 'var(--brass)', stroke: 'var(--cream)', strokeWidth: 1.5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </section>
+
+        {/* 02 サマリー */}
+        <section className="sec">
+          <div className="sh">
+            <span className="no num">02</span>
             <h2>サマリー</h2>
             <span className="right eyebrow">THIS MONTH</span>
           </div>
@@ -227,10 +368,10 @@ export default function AdminPage() {
           </div>
         </section>
 
-        {/* 02 クイックメニュー */}
+        {/* 03 クイックメニュー */}
         <section className="sec">
           <div className="sh">
-            <span className="no num">02</span>
+            <span className="no num">03</span>
             <h2>クイックメニュー</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
@@ -244,10 +385,10 @@ export default function AdminPage() {
           </div>
         </section>
 
-        {/* 03 最新の面接 */}
+        {/* 04 最新の面接 */}
         <section className="sec">
           <div className="sh">
-            <span className="no num">03</span>
+            <span className="no num">04</span>
             <h2>最新の面接</h2>
             <Link href="/admin/analytics/interviews" className="right link-detail">
               面接一覧 →
@@ -314,10 +455,10 @@ export default function AdminPage() {
           )}
         </section>
 
-        {/* 04 ステータス別集計 */}
+        {/* 05 ステータス別集計 */}
         <section className="sec">
           <div className="sh">
-            <span className="no num">04</span>
+            <span className="no num">05</span>
             <h2>ステータス別集計</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

@@ -3,12 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+// モバイル用ボトムタブ。売上系（/admin/analytics/sales）は導線から外し、
+// 面接運用で使う「面接フォーム案内（QR）」を常設。ページ/ルートは保持。
 const tabs = [
   { label: '📊 ダッシュ', href: '/admin', icon: '📊' },
   { label: '📋 面接', href: '/admin/analytics/interviews', icon: '📋' },
   { label: '👥 キャスト', href: '/admin/casts', icon: '👥' },
   { label: '📅 稼働', href: '/admin/shifts', icon: '📅' },
-  { label: '⚙️ その他', href: '/admin/analytics/sales', icon: '⚙️' }
+  { label: '📱 案内', href: '/admin/interview-form', icon: '📱' }
 ]
 
 export default function BottomTabBar() {

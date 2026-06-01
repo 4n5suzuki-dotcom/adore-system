@@ -70,6 +70,9 @@ export interface Interview {
   account_type?: string | null
   account_number?: string | null
   account_name?: string | null
+  // 再アプローチ（再連絡記録）
+  last_followup_at?: string | null
+  followup_count?: number | null
   created_at: string
   updated_at: string
 }

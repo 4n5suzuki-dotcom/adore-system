@@ -88,6 +88,12 @@ ALTER TABLE interviews ADD COLUMN IF NOT EXISTS account_type VARCHAR(20);
 ALTER TABLE interviews ADD COLUMN IF NOT EXISTS account_number VARCHAR(20);
 ALTER TABLE interviews ADD COLUMN IF NOT EXISTS account_name VARCHAR(255);
 
+-- 既存DB向けマイグレーション：再アプローチ（再連絡記録）カラムを追加
+-- 詳細は lib/supabase/migration_followups.sql を参照
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS last_followup_at TIMESTAMP;
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS followup_count INT DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_interviews_last_followup_at ON interviews(last_followup_at);
+
 -- 面接履歴
 CREATE TABLE IF NOT EXISTS interviews_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -480,6 +480,95 @@ a.crumb:hover {
   text-align: center;
 }
 
+/* ---------- re-approach（再アプローチ） ---------- */
+/* 連絡先の有無マーク */
+.adore-v3 .ra-marks {
+  display: inline-flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.adore-v3 .ra-mark {
+  font-family: var(--serif-jp);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  color: var(--ink-38);
+  background: var(--paper);
+  white-space: nowrap;
+}
+.adore-v3 .ra-mark.on {
+  color: var(--charcoal);
+  border-color: var(--brass);
+  background: rgba(168, 137, 76, 0.08);
+  font-weight: 600;
+}
+
+/* アクションボタン群 */
+.adore-v3 .ra-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.adore-v3 .ra-act {
+  font-family: var(--serif-jp);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 6px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.18s ease;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1.3;
+}
+.adore-v3 .ra-act:hover {
+  border-color: var(--brass);
+  background: rgba(168, 137, 76, 0.07);
+}
+.adore-v3 .ra-act.ra-done {
+  background: var(--charcoal);
+  color: var(--cream);
+  border-color: var(--charcoal);
+}
+.adore-v3 .ra-act.ra-done:hover {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: var(--charcoal);
+}
+.adore-v3 .ra-act:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* モバイルカード（縦積み） */
+.adore-v3 .mcard.ra-mcard {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.adore-v3 .ra-mc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.adore-v3 .ra-mc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 /* ---------- month calendar (出勤数カレンダー) ---------- */
 .adore-v3 .cal {
   width: 100%;

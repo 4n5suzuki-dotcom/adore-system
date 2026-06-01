@@ -52,6 +52,7 @@ export default function Sidebar() {
           </div>
           <NavLink href="/admin" label="📊 ダッシュボード" active={pathname === '/admin'} />
           <NavLink href="/admin/analytics/interviews" label="📋 面接管理" active={pathname === '/admin/analytics/interviews'} />
+          <NavLink href="/admin/re-approach" label="🔔 再アプローチ" active={pathname === '/admin/re-approach'} />
           <NavLink href="/admin/casts" label="👥 キャスト管理" active={pathname === '/admin/casts'} />
           <NavLink href="/admin/shifts" label="📅 稼働カレンダー" active={pathname === '/admin/shifts'} />
           <NavLink href="/admin/analytics/sales" label="📈 分析" active={pathname === '/admin/analytics/sales'} />

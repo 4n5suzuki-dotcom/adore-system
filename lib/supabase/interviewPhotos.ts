@@ -115,6 +115,29 @@ export async function uploadInterviewPhotos(
 }
 
 /**
+ * 管理画面（authenticated）用：写真の実ファイルを Storage から削除する。
+ * - 外部URL(http始まり=既存シード)は Storage 対象外なのでスキップ
+ * - 共有 supabase（authenticated）を使用。anon には DELETE 権限を与えない設計。
+ * 戻り値: ok=true で全削除成功（対象0件も成功扱い）
+ */
+export async function removeInterviewPhotoFiles(
+  paths: string[]
+): Promise<{ ok: boolean; error?: string }> {
+  const storagePaths = paths.filter((p) => p && !/^https?:\/\//i.test(p))
+  if (storagePaths.length === 0) return { ok: true }
+
+  const { error } = await supabase.storage
+    .from(INTERVIEW_PHOTO_BUCKET)
+    .remove(storagePaths)
+
+  if (error) {
+    console.error('removeInterviewPhotoFiles failed:', error.message)
+    return { ok: false, error: error.message }
+  }
+  return { ok: true }
+}
+
+/**
  * 管理画面表示用：interview_photos の photo_url（Storage パス）を署名URLへ変換する。
  * - http(s) で始まる値（既存シードの外部URL）はそのままパススルー（後方互換）
  * - それ以外はパスとみなし、private バケットの署名URL（TTL=300秒）を生成

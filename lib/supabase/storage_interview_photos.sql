@@ -38,7 +38,20 @@ create policy interview_photos_obj_select_auth on storage.objects
   for select to authenticated
   using (bucket_id = 'interview-photos');
 
--- ※ anon の SELECT/UPDATE/DELETE ポリシーは意図的に作成しない（閲覧・改ざん不可）
+-- 4) authenticated（管理者）: 面接データ削除時の実ファイル DELETE
+--    （管理画面の物理削除機能で使用。anon には付与しない）
+drop policy if exists interview_photos_obj_delete_auth on storage.objects;
+create policy interview_photos_obj_delete_auth on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'interview-photos');
+
+-- ※ anon の SELECT/UPDATE/DELETE ポリシーは意図的に作成しない（閲覧・改ざん・削除不可）
+
+-- 5) 後始末：設計外の anon 閲覧ポリシーがあれば削除（顔写真保護）
+--    ダッシュボード等で作られた "Allow anon read interview_photos" を除去。
+--    Storage 側・テーブル側どちらに作られていても消せるよう両方に対して実行（無ければ無害）。
+drop policy if exists "Allow anon read interview_photos" on storage.objects;
+drop policy if exists "Allow anon read interview_photos" on interview_photos;
 
 -- 確認: このバケットに対するポリシー一覧
 -- SELECT policyname, cmd, roles

@@ -1,5 +1,6 @@
 import { supabase } from '../supabase'
 import { supabasePublic } from './publicClient'
+import { removeInterviewPhotoFiles } from './interviewPhotos'
 import type { Interview, InterviewPhoto } from './types'
 
 // 指定した「年・月」の UTC 範囲 [start, end) を返すヘルパー
@@ -28,6 +29,23 @@ export async function getInterviewsForMonth(
 
   if (error) {
     console.error('getInterviewsForMonth failed:', error.message)
+    return []
+  }
+  return (data ?? []) as Interview[]
+}
+
+/**
+ * 全期間の面接データを取得（created_at の新しい順）。
+ * テストデータ掃除など、当月以外も対象にしたい一覧表示で使用。
+ */
+export async function getAllInterviews(): Promise<Interview[]> {
+  const { data, error } = await supabase
+    .from('interviews')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('getAllInterviews failed:', error.message)
     return []
   }
   return (data ?? []) as Interview[]
@@ -257,4 +275,112 @@ export async function createInterview(
     return null
   }
   return result as { id: string }
+}
+
+export interface DeleteInterviewsResult {
+  deleted: string[] // 完全に削除できた interview id
+  skippedCastLinked: { id: string; name: string }[] // casts 参照ありでスキップ
+  failed: { id: string; name: string; reason: string }[] // 失敗（DB未削除）
+}
+
+/**
+ * 面接データを物理削除する（管理画面/authenticated 専用）。
+ *
+ * 手順（顔写真の残留を防ぐため Storage→DB の順）:
+ *   1) casts 参照チェック … 採用→キャスト化済みは FK(CASCADE無し)で消せないためスキップ
+ *   2) interview_photos から写真パスを取得
+ *   3) Storage の実ファイルを削除（失敗したら DB は消さず「未削除」で報告）
+ *   4) interviews を DELETE（FK CASCADE で interview_photos / history 等の子行も消える）
+ *
+ * 面接単位でループし、部分的失敗をクリーンに集計して返す。
+ */
+export async function deleteInterviews(
+  targets: { id: string; name: string }[]
+): Promise<DeleteInterviewsResult> {
+  const result: DeleteInterviewsResult = {
+    deleted: [],
+    skippedCastLinked: [],
+    failed: [],
+  }
+  if (targets.length === 0) return result
+
+  const ids = targets.map((t) => t.id)
+
+  // 1) casts 参照チェック（一括）
+  const { data: castRows, error: castErr } = await supabase
+    .from('casts')
+    .select('interview_id')
+    .in('interview_id', ids)
+
+  if (castErr) {
+    // チェック自体が失敗 → 安全側で全件 failed（誤削除を避ける）
+    return {
+      deleted: [],
+      skippedCastLinked: [],
+      failed: targets.map((t) => ({
+        id: t.id,
+        name: t.name,
+        reason: 'キャスト参照の確認に失敗しました',
+      })),
+    }
+  }
+  const linkedIds = new Set(
+    (castRows ?? []).map((r) => r.interview_id as string)
+  )
+
+  for (const target of targets) {
+    // 採用→キャスト化済みはスキップ（FK 違反を未然に防ぐ）
+    if (linkedIds.has(target.id)) {
+      result.skippedCastLinked.push({ id: target.id, name: target.name })
+      continue
+    }
+
+    // 2) 写真パス取得
+    const { data: photoRows, error: photoErr } = await supabase
+      .from('interview_photos')
+      .select('photo_url')
+      .eq('interview_id', target.id)
+
+    if (photoErr) {
+      result.failed.push({
+        id: target.id,
+        name: target.name,
+        reason: '写真情報の取得に失敗しました',
+      })
+      continue
+    }
+    const paths = (photoRows ?? [])
+      .map((r) => r.photo_url as string | null)
+      .filter((p): p is string => !!p)
+
+    // 3) Storage 実ファイル削除（失敗なら DB は消さない）
+    const removeRes = await removeInterviewPhotoFiles(paths)
+    if (!removeRes.ok) {
+      result.failed.push({
+        id: target.id,
+        name: target.name,
+        reason: '写真ファイルの削除に失敗しました（DBは未削除）',
+      })
+      continue
+    }
+
+    // 4) DB 削除（CASCADE で子テーブルも消える）
+    const { error: delErr } = await supabase
+      .from('interviews')
+      .delete()
+      .eq('id', target.id)
+
+    if (delErr) {
+      result.failed.push({
+        id: target.id,
+        name: target.name,
+        reason: 'データベースの削除に失敗しました',
+      })
+      continue
+    }
+
+    result.deleted.push(target.id)
+  }
+
+  return result
 }

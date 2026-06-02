@@ -222,8 +222,53 @@ export default function AnalyticsInterviewsPage() {
           <Link href="/admin" className="crumb">
             ← DASHBOARD
           </Link>
-          <h1 className="ptitle">面接一覧</h1>
-          <p className="pmeta">{scopeMeta}</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="ptitle">面接一覧</h1>
+              <p className="pmeta">{scopeMeta}</p>
+            </div>
+            {/* 再アプローチへの動線（モバイルはボトムタブが無いためここが主要導線） */}
+            <Link
+              href="/admin/re-approach"
+              className="btn w-full sm:w-auto"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              <svg
+                width={17}
+                height={17}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.7}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              再アプローチ
+              <svg
+                width={16}
+                height={16}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h13M12 6l6 6-6 6" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
         {/* 取得範囲（当月 / 全期間） */}

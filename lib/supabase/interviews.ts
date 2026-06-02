@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { supabasePublic } from './publicClient'
 import type { Interview, InterviewPhoto } from './types'
 
 // 指定した「年・月」の UTC 範囲 [start, end) を返すヘルパー
@@ -238,7 +239,9 @@ export async function createInterview(
   tenantId: string,
   data: Partial<Interview>
 ): Promise<{ id: string } | null> {
-  const { data: result, error } = await supabase
+  // 公開フォームからの送信は anon 固定クライアント経由（管理者セッションを引き継がない）。
+  // 将来 interviews に RLS を有効化しても authenticated 送信で壊れないよう anon に統一。
+  const { data: result, error } = await supabasePublic
     .from('interviews')
     .insert([
       {

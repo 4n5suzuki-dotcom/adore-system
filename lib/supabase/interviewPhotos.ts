@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { supabasePublic } from './publicClient'
 import type { InterviewPhoto } from './types'
 
 // =====================================================================
@@ -80,7 +81,8 @@ export async function uploadInterviewPhotos(
     const path = `${interviewId}/${num}.${ext}`
 
     // 1) Storage へアップロード（上書き禁止。再試行で既存なら「成功扱い」で次へ）
-    const { error: uploadError } = await supabase.storage
+    //    anon 固定クライアント経由（管理者セッションを引き継がない）
+    const { error: uploadError } = await supabasePublic.storage
       .from(INTERVIEW_PHOTO_BUCKET)
       .upload(path, file, { upsert: false, contentType: file.type })
 
@@ -93,7 +95,8 @@ export async function uploadInterviewPhotos(
     }
 
     // 2) interview_photos にメタデータ（photo_url にはパスを保存）
-    const { error: metaError } = await supabase
+    //    anon 固定クライアント経由（interview_photos の anon INSERT ポリシーに一致）
+    const { error: metaError } = await supabasePublic
       .from('interview_photos')
       .insert([{ interview_id: interviewId, photo_num: num, photo_url: path }])
 

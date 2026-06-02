@@ -10,6 +10,7 @@ import {
   updateInterviewStatus,
   updateInterviewMemo,
 } from '@/lib/supabase/interviews'
+import { getSignedInterviewPhotoUrls } from '@/lib/supabase/interviewPhotos'
 import type { Interview, InterviewPhoto } from '@/lib/supabase/types'
 
 // ステータス → ラベル + バッジ色（Tailwind が検出できるよう完全なクラス名で定義）
@@ -66,6 +67,8 @@ export default function InterviewDetailPage() {
 
   const [interview, setInterview] = useState<Interview | null>(null)
   const [photos, setPhotos] = useState<InterviewPhoto[]>([])
+  // photo.id → 表示用の署名URL（private バケットのため都度生成。TTL=300秒）
+  const [photoSrcById, setPhotoSrcById] = useState<Record<string, string>>({})
   const [zoomPhoto, setZoomPhoto] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -83,6 +86,10 @@ export default function InterviewDetailPage() {
         ])
         setInterview(data)
         setPhotos(photoData)
+        // private バケットの写真は署名URLに変換して表示（外部URLはパススルー）
+        if (photoData.length > 0) {
+          setPhotoSrcById(await getSignedInterviewPhotoUrls(photoData))
+        }
         // 成功時に memoText を初期化
         if (data) setMemoText(data.memo ?? '')
       } catch (err) {
@@ -261,10 +268,10 @@ export default function InterviewDetailPage() {
                 <div key={photo.id} className="overflow-hidden rounded border border-gray-300">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={photo.photo_url}
+                    src={photoSrcById[photo.id] ?? ''}
                     alt={`写真 ${photo.photo_num}`}
                     className="w-full h-48 object-cover cursor-pointer hover:opacity-80 transition"
-                    onClick={() => setZoomPhoto(photo.photo_url)}
+                    onClick={() => setZoomPhoto(photoSrcById[photo.id] ?? null)}
                     onError={(e) => {
                       e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="14" fill="%23999"%3E画像がありません%3C/text%3E%3C/svg%3E'
                     }}

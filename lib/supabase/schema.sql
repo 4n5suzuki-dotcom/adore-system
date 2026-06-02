@@ -106,6 +106,11 @@ CREATE TABLE IF NOT EXISTS interviews_history (
 );
 
 -- 面接写真
+-- ※ photo_url には Supabase Storage（private バケット interview-photos）の
+--    パスを格納する。バケット作成・ポリシーは storage_interview_photos.sql、
+--    本テーブルの RLS（anon INSERT / authenticated SELECT）は
+--    rls_interview_photos.sql を参照（本番で別途実行）。
+--    既存シードの外部URL（http始まり）は管理画面でパススルー表示される。
 CREATE TABLE IF NOT EXISTS interview_photos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   interview_id UUID NOT NULL REFERENCES interviews(id) ON DELETE CASCADE,

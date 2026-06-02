@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createInterview } from '@/lib/supabase/interviews'
+import {
+  uploadInterviewPhotos,
+  validatePhotoFile,
+  MAX_INTERVIEW_PHOTOS,
+  ALLOWED_PHOTO_MIME,
+} from '@/lib/supabase/interviewPhotos'
 import type { Interview } from '@/lib/supabase/types'
 import '@/styles/adore-v3.css'
 
@@ -153,6 +159,10 @@ export default function InterviewEntryPage() {
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<boolean>(false)
+  // 二重応募防止：一度作成した interview の id を保持し、再試行時は再作成しない
+  const [createdInterviewId, setCreatedInterviewId] = useState<string | null>(null)
+  // 既にアップロード＋メタ保存まで完了した写真の番号（再試行時は未完分のみ処理）
+  const [uploadedNums, setUploadedNums] = useState<number[]>([])
 
   // 写真プレビュー URL（photos 変更時に再生成し、クリーンアップで解放）
   const photoUrls = useMemo(
@@ -208,7 +218,19 @@ export default function InterviewEntryPage() {
 
   const addPhotos = (files: FileList | null) => {
     if (!files) return
-    setPhotos((prev) => [...prev, ...Array.from(files)].slice(0, 6))
+    setError(null)
+    const incoming = Array.from(files)
+    // 形式・サイズを検証。不正なファイルは弾いてメッセージを表示
+    const valid: File[] = []
+    for (const file of incoming) {
+      const validationError = validatePhotoFile(file)
+      if (validationError) {
+        setError(validationError)
+        continue
+      }
+      valid.push(file)
+    }
+    setPhotos((prev) => [...prev, ...valid].slice(0, MAX_INTERVIEW_PHOTOS))
   }
   const removePhoto = (index: number) =>
     setPhotos((prev) => prev.filter((_, i) => i !== index))
@@ -216,18 +238,50 @@ export default function InterviewEntryPage() {
   const handleSubmit = async () => {
     setError(null)
     setLoading(true)
-    // Interview の列に対応するデータ + 同意情報のみ送信（extra/photos は未永続化）
-    const payload: Partial<Interview> = {
-      ...formData,
-      agreed_back_regulation_version: BACK_REGULATION_VERSION,
-      agreed_at: agreedAt,
+
+    // 1) interview 本体を作成（再試行時は再作成せず既存 id を使う＝二重応募防止）
+    let interviewId = createdInterviewId
+    if (!interviewId) {
+      const payload: Partial<Interview> = {
+        ...formData,
+        agreed_back_regulation_version: BACK_REGULATION_VERSION,
+        agreed_at: agreedAt,
+      }
+      const result = await createInterview(TENANT_ID, payload)
+      if (!result) {
+        setError('送信に失敗しました。時間をおいて再度お試しください。')
+        setLoading(false)
+        return
+      }
+      interviewId = result.id
+      setCreatedInterviewId(interviewId)
     }
-    const result = await createInterview(TENANT_ID, payload)
-    if (result) {
-      setSuccess(true)
-    } else {
-      setError('送信に失敗しました。時間をおいて再度お試しください。')
+
+    // 2) 写真をアップロード（未完分のみ。失敗したら成功扱いにせずエラー表示＋再試行可）
+    if (photos.length > 0) {
+      const pending = photos
+        .map((file, i) => ({ file, num: i + 1 }))
+        .filter((p) => !uploadedNums.includes(p.num))
+
+      if (pending.length > 0) {
+        const res = await uploadInterviewPhotos(interviewId, pending)
+        if (res.doneNums.length > 0) {
+          setUploadedNums((prev) =>
+            Array.from(new Set([...prev, ...res.doneNums]))
+          )
+        }
+        if (!res.ok) {
+          setError(
+            res.error ??
+              '写真のアップロードに失敗しました。「送信する」を再度押してお試しください（応募情報は保存済みのため二重登録にはなりません）。'
+          )
+          setLoading(false)
+          return
+        }
+      }
     }
+
+    setSuccess(true)
     setLoading(false)
   }
 
@@ -558,7 +612,7 @@ export default function InterviewEntryPage() {
             <div className="space-y-5">
               <h2 className="af-h2">写真アップロード</h2>
               <p className="af-muted" style={{ fontSize: 13.5 }}>
-                最大6枚までアップロードできます。
+                最大{MAX_INTERVIEW_PHOTOS}枚までアップロードできます（JPEG / PNG / WebP・1枚 5MB まで）。
               </p>
               <div
                 onDragOver={(e) => e.preventDefault()}
@@ -576,7 +630,7 @@ export default function InterviewEntryPage() {
                   ファイルを選択
                   <input
                     type="file"
-                    accept="image/*"
+                    accept={ALLOWED_PHOTO_MIME.join(',')}
                     multiple
                     className="hidden"
                     onChange={(e) => addPhotos(e.target.files)}

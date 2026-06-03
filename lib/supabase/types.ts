@@ -75,7 +75,7 @@ export interface Interview {
   followup_count?: number | null
   // アンケート回答（応募フォームの選択式・固定文字列）
   source_channel?: string | null // Q1 当店を知ったきっかけ
-  scout_company?: string | null // Q2 スカウト会社（Q1=スカウト時のみ）
+  scout_company?: string | null // スカウト会社（応募者には聞かず、スタッフが管理画面で入力）
   application_reason?: string | null // Q3 応募の決め手
   created_at: string
   updated_at: string

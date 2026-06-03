@@ -86,8 +86,9 @@ const STEPS = [
 ]
 
 // アンケート選択肢（すべて固定文字列・選択式）
+// ※ scout_company（スカウト会社）は応募者には聞かず、スタッフが管理画面で入力する運用に変更したため
+//    フォームの選択肢は持たない（DBカラム・型は scout_company を保持）。
 const SOURCE_CHANNELS = ['web検索', 'インスタ', 'X(Twitter)', 'スカウト', '知人の紹介', 'その他'] as const
-const SCOUT_COMPANIES = ['big', 'プログレス', 'フォックス', '個人', 'その他'] as const
 const APPLICATION_REASONS = ['時給・条件', 'お店の雰囲気', '通いやすさ', '知人の紹介', 'SNSの印象', 'その他'] as const
 
 // 出勤希望・嗜好など（Interview 型に列が無い項目はこちらで保持）
@@ -216,14 +217,10 @@ export default function InterviewEntryPage() {
     }
     // Step 7（index 6）：バック規定同意ゲート
     if (currentStep === 6 && !agreeBackRegulation) return
-    // Step 8（index 7）：アンケート必須チェック（Q1・Q3必須／Q2はスカウト時のみ必須）
+    // Step 8（index 7）：アンケート必須チェック（Q1・Q3必須）
     if (currentStep === 7) {
       if (!formData.source_channel || !formData.application_reason) {
         setError('アンケートのQ1とQ3を選択してください')
-        return
-      }
-      if (formData.source_channel === 'スカウト' && !formData.scout_company) {
-        setError('スカウト会社を選択してください')
         return
       }
     }
@@ -803,15 +800,7 @@ export default function InterviewEntryPage() {
                 </label>
                 <select
                   value={formData.source_channel || ''}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    // スカウト以外を選んだら Q2(scout_company) をクリア（残留値防止）
-                    setFormData((prev) => ({
-                      ...prev,
-                      source_channel: v,
-                      scout_company: v === 'スカウト' ? prev.scout_company : null,
-                    }))
-                  }}
+                  onChange={(e) => setField('source_channel', e.target.value)}
                   className="af-select"
                 >
                   <option value="">選択してください</option>
@@ -822,27 +811,6 @@ export default function InterviewEntryPage() {
                   ))}
                 </select>
               </div>
-
-              {/* Q2：スカウト会社（Q1=スカウト時のみ表示・必須） */}
-              {formData.source_channel === 'スカウト' && (
-                <div>
-                  <label className="af-label">
-                    スカウト会社 <span className="req">*</span>
-                  </label>
-                  <select
-                    value={formData.scout_company || ''}
-                    onChange={(e) => setField('scout_company', e.target.value)}
-                    className="af-select"
-                  >
-                    <option value="">選択してください</option>
-                    {SCOUT_COMPANIES.map((o) => (
-                      <option key={o} value={o}>
-                        {o}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
               {/* Q3：応募の決め手（必須） */}
               <div>
@@ -894,9 +862,6 @@ export default function InterviewEntryPage() {
                   }
                 />
                 <SummaryRow label="知ったきっかけ" value={formData.source_channel} />
-                {formData.source_channel === 'スカウト' && (
-                  <SummaryRow label="スカウト会社" value={formData.scout_company} />
-                )}
                 <SummaryRow label="応募の決め手" value={formData.application_reason} />
               </dl>
             </div>

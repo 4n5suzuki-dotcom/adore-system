@@ -9,6 +9,7 @@ import {
   getInterviewPhotos,
   updateInterviewStatus,
   updateInterviewMemo,
+  updateInterviewScout,
 } from '@/lib/supabase/interviews'
 import { getSignedInterviewPhotoUrls } from '@/lib/supabase/interviewPhotos'
 import type { Interview, InterviewPhoto } from '@/lib/supabase/types'
@@ -76,6 +77,11 @@ export default function InterviewDetailPage() {
   const [editingMemo, setEditingMemo] = useState<boolean>(false)
   const [memoText, setMemoText] = useState<string>('')
   const [isSaving, setIsSaving] = useState<boolean>(false)
+  // スカウト情報の編集（なし/あり トグル＋自由記載）
+  const [editingScout, setEditingScout] = useState<boolean>(false)
+  const [scoutMode, setScoutMode] = useState<'none' | 'yes'>('none')
+  const [scoutText, setScoutText] = useState<string>('')
+  const [savingScout, setSavingScout] = useState<boolean>(false)
 
   useEffect(() => {
     const load = async () => {
@@ -197,6 +203,35 @@ export default function InterviewDetailPage() {
     setMemoText(interview?.memo ?? '')
   }
 
+  // スカウト情報 編集開始（既定は現在値。値あり＝「あり」、無し＝「なし」）
+  const handleScoutEditStart = () => {
+    const cur = interview?.scout_company ?? ''
+    setScoutMode(cur ? 'yes' : 'none')
+    setScoutText(cur)
+    setEditingScout(true)
+  }
+
+  // スカウト情報 保存（なし=null / あり=自由記載。updated_at は更新しない）
+  const handleScoutSave = async () => {
+    setError(null)
+    setSuccess(null)
+    setSavingScout(true)
+    const value = scoutMode === 'yes' ? scoutText.trim() || null : null
+    const ok = await updateInterviewScout(id, value)
+    if (ok) {
+      setInterview((prev) => (prev ? { ...prev, scout_company: value } : prev))
+      setEditingScout(false)
+      setSuccess('スカウト情報を保存しました')
+    } else {
+      setError('保存に失敗しました')
+    }
+    setSavingScout(false)
+  }
+
+  const handleScoutCancel = () => {
+    setEditingScout(false)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -309,8 +344,72 @@ export default function InterviewDetailPage() {
         <section className="card-wine-border">
           <h2 className="heading-2 text-2xl mb-4">アンケート</h2>
           <InfoRow label="知ったきっかけ" value={orEmpty(interview.source_channel)} />
-          <InfoRow label="スカウト会社" value={orEmpty(interview.scout_company)} />
           <InfoRow label="応募の決め手" value={orEmpty(interview.application_reason)} />
+        </section>
+
+        {/* セクション 3.6: スカウト情報（スタッフ入力・なし/あり） */}
+        <section className="card-wine-border">
+          <h2 className="heading-2 text-2xl mb-4">スカウト情報</h2>
+          {editingScout ? (
+            <div>
+              {/* なし / あり トグル */}
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setScoutMode('none')}
+                  className={scoutMode === 'none' ? 'btn-primary' : 'btn-secondary'}
+                >
+                  なし（個人）
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScoutMode('yes')}
+                  className={scoutMode === 'yes' ? 'btn-primary' : 'btn-secondary'}
+                >
+                  あり（記載）
+                </button>
+              </div>
+
+              {scoutMode === 'yes' && (
+                <textarea
+                  value={scoutText}
+                  onChange={(e) => setScoutText(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-200 rounded bg-yellow-50 focus:outline-none focus:border-wine-red"
+                  placeholder="スカウト会社名や経緯を自由に記載（例：big経由で体入→担当が外れ個人で再来店）"
+                />
+              )}
+
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleScoutSave}
+                  disabled={savingScout || (scoutMode === 'yes' && !scoutText.trim())}
+                  className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  💾 保存
+                </button>
+                <button
+                  onClick={handleScoutCancel}
+                  disabled={savingScout}
+                  className="btn-secondary disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  🚫 キャンセル
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-gray-800 whitespace-pre-wrap">
+                {interview.scout_company ? interview.scout_company : 'なし（個人）'}
+              </p>
+              <button
+                onClick={handleScoutEditStart}
+                className="text-wine-red font-semibold hover:underline mt-2"
+              >
+                ✏️ 編集
+              </button>
+            </div>
+          )}
         </section>
 
         {/* セクション 4: 採用判定 */}

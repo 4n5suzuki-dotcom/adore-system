@@ -79,7 +79,8 @@ CREATE TABLE IF NOT EXISTS interviews (
   account_name VARCHAR(255),
   -- アンケート回答（応募フォームの選択式）
   source_channel VARCHAR(50),
-  scout_company VARCHAR(50),
+  -- scout_company は自由記載（スタッフが管理画面で入力）。TEXT 運用。
+  scout_company TEXT,
   application_reason VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -103,6 +104,10 @@ CREATE INDEX IF NOT EXISTS idx_interviews_last_followup_at ON interviews(last_fo
 ALTER TABLE interviews ADD COLUMN IF NOT EXISTS source_channel VARCHAR(50);
 ALTER TABLE interviews ADD COLUMN IF NOT EXISTS scout_company VARCHAR(50);
 ALTER TABLE interviews ADD COLUMN IF NOT EXISTS application_reason VARCHAR(50);
+
+-- 既存DB向け：scout_company を自由記載対応で TEXT へ拡張（非破壊）
+-- 詳細は lib/supabase/migration_scout_widen.sql を参照
+ALTER TABLE interviews ALTER COLUMN scout_company TYPE TEXT;
 
 -- 面接履歴
 CREATE TABLE IF NOT EXISTS interviews_history (

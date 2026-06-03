@@ -233,6 +233,29 @@ export async function updateInterviewMemo(
   return true
 }
 
+/**
+ * スカウト情報のみを更新（スタッフ/authenticated 用）。
+ * なし＝null、あり＝自由記載文字列。
+ *
+ * 重要: updated_at は意図的に更新しない。スカウト情報の編集は「応募者への連絡」
+ * ではないため、再アプローチ抽出の起点（updated_at = 最終接触の代理）を乱さない。
+ * そのため既存の updateInterview / updateInterviewMemo は流用しない。
+ */
+export async function updateInterviewScout(
+  id: string,
+  scoutCompany: string | null
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('interviews')
+    .update({ scout_company: scoutCompany })
+    .eq('id', id)
+  if (error) {
+    console.error('updateInterviewScout failed:', error.message)
+    return false
+  }
+  return true
+}
+
 /** 面接情報を更新（複数項目対応） */
 export async function updateInterview(
   id: string,

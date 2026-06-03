@@ -77,6 +77,10 @@ CREATE TABLE IF NOT EXISTS interviews (
   account_type VARCHAR(20),
   account_number VARCHAR(20),
   account_name VARCHAR(255),
+  -- アンケート回答（応募フォームの選択式）
+  source_channel VARCHAR(50),
+  scout_company VARCHAR(50),
+  application_reason VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -93,6 +97,12 @@ ALTER TABLE interviews ADD COLUMN IF NOT EXISTS account_name VARCHAR(255);
 ALTER TABLE interviews ADD COLUMN IF NOT EXISTS last_followup_at TIMESTAMP;
 ALTER TABLE interviews ADD COLUMN IF NOT EXISTS followup_count INT DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_interviews_last_followup_at ON interviews(last_followup_at);
+
+-- 既存DB向けマイグレーション：アンケート回答カラムを追加
+-- 詳細は lib/supabase/migration_survey_fields.sql を参照
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS source_channel VARCHAR(50);
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS scout_company VARCHAR(50);
+ALTER TABLE interviews ADD COLUMN IF NOT EXISTS application_reason VARCHAR(50);
 
 -- 面接履歴
 CREATE TABLE IF NOT EXISTS interviews_history (

@@ -74,15 +74,21 @@ TOTALから他キャストのドリンクバック を引く
 どちらか良い方をバックいたします`
 
 const STEPS = [
-  '基本情報',
-  '住所・本籍地',
-  '出勤希望',
-  'プロフィール・嗜好',
-  '写真アップロード',
-  'バック規定確認・同意',
-  '振込先情報',
-  '確認・送信',
+  '基本情報', // 0
+  '住所・本籍地', // 1
+  '出勤希望', // 2
+  'プロフィール・嗜好', // 3
+  '写真アップロード', // 4
+  '振込先情報', // 5（バック規定より前へ移動）
+  'バック規定確認・同意', // 6
+  'アンケート', // 7（新規）
+  '確認・送信', // 8
 ]
+
+// アンケート選択肢（すべて固定文字列・選択式）
+const SOURCE_CHANNELS = ['web検索', 'インスタ', 'X(Twitter)', 'スカウト', '知人の紹介', 'その他'] as const
+const SCOUT_COMPANIES = ['big', 'プログレス', 'フォックス', '個人', 'その他'] as const
+const APPLICATION_REASONS = ['時給・条件', 'お店の雰囲気', '通いやすさ', '知人の紹介', 'SNSの印象', 'その他'] as const
 
 // 出勤希望・嗜好など（Interview 型に列が無い項目はこちらで保持）
 interface ExtraData {
@@ -193,8 +199,8 @@ export default function InterviewEntryPage() {
         return
       }
     }
-    if (currentStep === 5 && !agreeBackRegulation) return
-    if (currentStep === 6) {
+    // Step 6（index 5）：振込先情報の必須チェック
+    if (currentStep === 5) {
       if (
         !formData.bank_name ||
         !formData.branch_name ||
@@ -205,6 +211,19 @@ export default function InterviewEntryPage() {
         setError(
           '振込先情報（銀行名・支店名・口座種別・口座番号・口座名義）をすべて入力してください'
         )
+        return
+      }
+    }
+    // Step 7（index 6）：バック規定同意ゲート
+    if (currentStep === 6 && !agreeBackRegulation) return
+    // Step 8（index 7）：アンケート必須チェック（Q1・Q3必須／Q2はスカウト時のみ必須）
+    if (currentStep === 7) {
+      if (!formData.source_channel || !formData.application_reason) {
+        setError('アンケートのQ1とQ3を選択してください')
+        return
+      }
+      if (formData.source_channel === 'スカウト' && !formData.scout_company) {
+        setError('スカウト会社を選択してください')
         return
       }
     }
@@ -663,8 +682,8 @@ export default function InterviewEntryPage() {
             </div>
           )}
 
-          {/* Step 6: バック規定確認・同意 */}
-          {currentStep === 5 && (
+          {/* Step 7: バック規定確認・同意 */}
+          {currentStep === 6 && (
             <div className="space-y-5">
               <h2 className="af-h2">バック規定確認・同意</h2>
               <div className="af-reg">{BACK_REGULATION_TEXT}</div>
@@ -690,8 +709,8 @@ export default function InterviewEntryPage() {
             </div>
           )}
 
-          {/* Step 7: 振込先情報 */}
-          {currentStep === 6 && (
+          {/* Step 6: 振込先情報 */}
+          {currentStep === 5 && (
             <div className="space-y-5">
               <h2 className="af-h2">振込先情報</h2>
 
@@ -769,8 +788,85 @@ export default function InterviewEntryPage() {
             </div>
           )}
 
-          {/* Step 8: 確認・送信 */}
+          {/* Step 8: アンケート */}
           {currentStep === 7 && (
+            <div className="space-y-5">
+              <h2 className="af-h2">アンケート</h2>
+              <p className="af-muted" style={{ fontSize: 13.5 }}>
+                よりよいご案内のため、3問にご回答ください。
+              </p>
+
+              {/* Q1：知ったきっかけ（必須） */}
+              <div>
+                <label className="af-label">
+                  当店を何で知りましたか／何で検索しましたか <span className="req">*</span>
+                </label>
+                <select
+                  value={formData.source_channel || ''}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    // スカウト以外を選んだら Q2(scout_company) をクリア（残留値防止）
+                    setFormData((prev) => ({
+                      ...prev,
+                      source_channel: v,
+                      scout_company: v === 'スカウト' ? prev.scout_company : null,
+                    }))
+                  }}
+                  className="af-select"
+                >
+                  <option value="">選択してください</option>
+                  {SOURCE_CHANNELS.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Q2：スカウト会社（Q1=スカウト時のみ表示・必須） */}
+              {formData.source_channel === 'スカウト' && (
+                <div>
+                  <label className="af-label">
+                    スカウト会社 <span className="req">*</span>
+                  </label>
+                  <select
+                    value={formData.scout_company || ''}
+                    onChange={(e) => setField('scout_company', e.target.value)}
+                    className="af-select"
+                  >
+                    <option value="">選択してください</option>
+                    {SCOUT_COMPANIES.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Q3：応募の決め手（必須） */}
+              <div>
+                <label className="af-label">
+                  応募の決め手 <span className="req">*</span>
+                </label>
+                <select
+                  value={formData.application_reason || ''}
+                  onChange={(e) => setField('application_reason', e.target.value)}
+                  className="af-select"
+                >
+                  <option value="">選択してください</option>
+                  {APPLICATION_REASONS.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Step 9: 確認・送信 */}
+          {currentStep === 8 && (
             <div className="space-y-5">
               <h2 className="af-h2">確認・送信</h2>
               <p className="af-muted" style={{ fontSize: 13.5 }}>
@@ -784,6 +880,11 @@ export default function InterviewEntryPage() {
                 <SummaryRow label="希望曜日" value={extra.pref_days} />
                 <SummaryRow label="希望時間帯" value={extra.pref_hours} />
                 <SummaryRow label="写真" value={`${photos.length} 枚`} />
+                <SummaryRow label="銀行名" value={formData.bank_name} />
+                <SummaryRow label="支店名" value={formData.branch_name} />
+                <SummaryRow label="口座種別" value={formData.account_type} />
+                <SummaryRow label="口座番号" value={formData.account_number} />
+                <SummaryRow label="口座名義" value={formData.account_name} />
                 <SummaryRow
                   label="バック規定同意"
                   value={
@@ -792,11 +893,11 @@ export default function InterviewEntryPage() {
                       : '未同意'
                   }
                 />
-                <SummaryRow label="銀行名" value={formData.bank_name} />
-                <SummaryRow label="支店名" value={formData.branch_name} />
-                <SummaryRow label="口座種別" value={formData.account_type} />
-                <SummaryRow label="口座番号" value={formData.account_number} />
-                <SummaryRow label="口座名義" value={formData.account_name} />
+                <SummaryRow label="知ったきっかけ" value={formData.source_channel} />
+                {formData.source_channel === 'スカウト' && (
+                  <SummaryRow label="スカウト会社" value={formData.scout_company} />
+                )}
+                <SummaryRow label="応募の決め手" value={formData.application_reason} />
               </dl>
             </div>
           )}
@@ -824,7 +925,7 @@ export default function InterviewEntryPage() {
           ) : (
             <button
               onClick={goNext}
-              disabled={currentStep === 5 && !agreeBackRegulation}
+              disabled={currentStep === 6 && !agreeBackRegulation}
               className="af-btn af-btn-primary"
             >
               次へ

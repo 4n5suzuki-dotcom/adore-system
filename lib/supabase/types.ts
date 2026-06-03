@@ -73,6 +73,10 @@ export interface Interview {
   // 再アプローチ（再連絡記録）
   last_followup_at?: string | null
   followup_count?: number | null
+  // アンケート回答（応募フォームの選択式・固定文字列）
+  source_channel?: string | null // Q1 当店を知ったきっかけ
+  scout_company?: string | null // Q2 スカウト会社（Q1=スカウト時のみ）
+  application_reason?: string | null // Q3 応募の決め手
   created_at: string
   updated_at: string
 }

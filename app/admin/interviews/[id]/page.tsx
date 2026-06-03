@@ -305,6 +305,14 @@ export default function InterviewDetailPage() {
           <InfoRow label="備考" value="未入力" />
         </section>
 
+        {/* セクション 3.5: アンケート */}
+        <section className="card-wine-border">
+          <h2 className="heading-2 text-2xl mb-4">アンケート</h2>
+          <InfoRow label="知ったきっかけ" value={orEmpty(interview.source_channel)} />
+          <InfoRow label="スカウト会社" value={orEmpty(interview.scout_company)} />
+          <InfoRow label="応募の決め手" value={orEmpty(interview.application_reason)} />
+        </section>
+
         {/* セクション 4: 採用判定 */}
         <section className="card-wine-border">
           <h2 className="heading-2 text-2xl mb-4">採用判定</h2>
